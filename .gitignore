@@ -23,10 +23,10 @@ wheels/
 .installed.cfg
 *.egg
 
-# Environment variables
+# Environment
 .env
 
-# Generated HTML files
+# Generated files
 *.html
 
 # IDE
