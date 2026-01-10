@@ -20,181 +20,85 @@ def encrypt_link(link, password):
 
 def detect_file_type(link):
     """
-    ✅ ENHANCED: Detect file type from link
-    Based on reference repository's SUPPORTED_TYPES
+    Detect file type from link
     """
     link_lower = link.lower()
     
-    # Video extensions - From reference repo
-    video_extensions = [
-        '.m3u8', '.ts', '.mp4', '.mkv', '.avi', '.mov', 
-        '.wmv', '.flv', '.webm', '.m4v', '.3gp'
-    ]
+    video_extensions = ['.m3u8', '.ts', '.mp4', '.mkv', '.avi', '.mov', '.wmv', '.flv', '.webm', '.m4v', '.3gp']
+    image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
+    document_extensions = ['.pdf', '.doc', '.docx', '.txt', '.zip', '.rar']
     
-    # Image extensions
-    image_extensions = [
-        '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'
-    ]
-    
-    # Document extensions
-    document_extensions = [
-        '.pdf', '.doc', '.docx', '.txt', '.zip', '.rar'
-    ]
-    
-    # Check video
     if any(ext in link_lower for ext in video_extensions):
         return 'VIDEO'
-    
-    # Check YouTube/streaming - IMPORTANT
     if any(x in link_lower for x in ['youtube.com', 'youtu.be', '/watch', 'stream', '/video/']):
         return 'VIDEO'
-    
-    # Check images
     if any(ext in link_lower for ext in image_extensions):
         return 'IMAGE'
-    
-    # Check documents
     if any(ext in link_lower for ext in document_extensions):
         return 'PDF'
     
-    # Default to OTHER
     return 'OTHER'
 
 def parse_txt_content(content):
     """
-    ✅ SUPER ROBUST PARSER - Detects ALL links
-    
-    Supports formats:
-    1. [CATEGORY] Title: URL
-    2. Title: URL
-    3. [CATEGORY] Title: URL (multiple PDFs on same line)
-    
-    Inspired by reference repository's parse logic
+    Robust Parser
     """
     lines = content.strip().split('\n')
     categories = {}
-    default_category = "OTHER"
+    default_category = "Uncategorized"
     
-    # Stats for debugging
-    total_lines = 0
     parsed_lines = 0
     
     for line in lines:
-        total_lines += 1
         line = line.strip()
-        
-        # Skip empty lines and metadata headers
-        if not line:
-            continue
-        if line.startswith('CONTENT EXPORT:') or line.startswith('ID:') or line.startswith('==='):
+        if not line or line.startswith(('CONTENT EXPORT:', 'ID:', '===')):
             continue
         
-        # ✅ CRITICAL: Check if line has URL
         if not ('http://' in line or 'https://' in line):
             continue
         
-        # ✅ METHOD 1: Standard format [CATEGORY] Title: URL
-        # Pattern: [CATEGORY] anything before last http/https
+        # Method 1: [CATEGORY] Title: URL
         category_match = re.match(r'^\[([^\]]+)\]\s*(.+?):\s*(https?://\S+)', line)
-        
         if category_match:
             parsed_lines += 1
             category = category_match.group(1).strip()
             title = category_match.group(2).strip()
             link = category_match.group(3).strip()
             
-            file_type = detect_file_type(link)
-            
-            if category not in categories:
-                categories[category] = []
-            
-            categories[category].append({
-                'title': title,
-                'link': link,
-                'type': file_type
-            })
+            if category not in categories: categories[category] = []
+            categories[category].append({'title': title, 'link': link, 'type': detect_file_type(link)})
             continue
         
-        # ✅ METHOD 2: Without category - Title: URL
-        # Just split on : and take last http
-        if ':' in line and ('http://' in line or 'https://' in line):
-            # Find ALL URLs in line (for multiple PDFs case)
-            urls = re.findall(r'https?://\S+', line)
-            
-            if urls:
-                # Get text before first URL as title base
-                first_url_pos = line.find(urls[0])
-                text_before_url = line[:first_url_pos].strip()
-                
-                # Remove [CATEGORY] if present
-                category = default_category
-                cat_match = re.match(r'^\[([^\]]+)\]\s*(.+)', text_before_url)
-                if cat_match:
-                    category = cat_match.group(1).strip()
-                    text_before_url = cat_match.group(2).strip()
-                
-                # Remove trailing colon
-                text_before_url = text_before_url.rstrip(':').strip()
-                
-                # Process each URL
-                for idx, url in enumerate(urls):
-                    parsed_lines += 1
-                    
-                    # For multiple URLs, add index to title
-                    if len(urls) > 1:
-                        title = f"{text_before_url} - Part {idx + 1}"
-                    else:
-                        title = text_before_url
-                    
-                    file_type = detect_file_type(url)
-                    
-                    if category not in categories:
-                        categories[category] = []
-                    
-                    categories[category].append({
-                        'title': title if title else f"Item {idx + 1}",
-                        'link': url,
-                        'type': file_type
-                    })
-                
-                continue
-        
-        # ✅ METHOD 3: Fallback - Just extract all URLs
-        # For lines where format is completely different
+        # Method 2: Title: URL (Handle multiple URLs)
         urls = re.findall(r'https?://\S+', line)
         if urls:
-            for idx, url in enumerate(urls):
-                parsed_lines += 1
+            parsed_lines += 1
+            # Text before first URL
+            first_url_pos = line.find(urls[0])
+            text_part = line[:first_url_pos].strip()
+
+            # Extract category if present
+            category = default_category
+            cat_match = re.match(r'^\[([^\]]+)\]\s*(.+)', text_part)
+            if cat_match:
+                category = cat_match.group(1).strip()
+                text_part = cat_match.group(2).strip()
+
+            title_base = text_part.rstrip(':').strip()
+
+            for i, url in enumerate(urls):
+                title = title_base if len(urls) == 1 else f"{title_base} Part {i+1}"
+                if not title: title = f"Link {i+1}"
                 
-                # Try to get text before URL as title
-                url_pos = line.find(url)
-                title = line[:url_pos].strip()
-                
-                # Clean title
-                title = re.sub(r'^\[([^\]]+)\]\s*', '', title)  # Remove [CATEGORY]
-                title = title.rstrip(':').strip()
-                
-                if not title:
-                    title = f"Link {idx + 1}"
-                
-                file_type = detect_file_type(url)
-                
-                if default_category not in categories:
-                    categories[default_category] = []
-                
-                categories[default_category].append({
-                    'title': title,
-                    'link': url,
-                    'type': file_type
-                })
-    
-    print(f"📊 Parser Stats: {parsed_lines}/{total_lines} lines parsed")
+                if category not in categories: categories[category] = []
+                categories[category].append({'title': title, 'link': url, 'type': detect_file_type(url)})
+
     return categories
 
 def generate_html(categories, password, batch_name, credit_name):
-    """Generate password-protected HTML"""
+    """Generate Premium UI HTML"""
     
-    # Encrypt all links
+    # Encrypt data
     encrypted_data = {}
     for category, items in categories.items():
         encrypted_data[category] = []
@@ -205,686 +109,754 @@ def generate_html(categories, password, batch_name, credit_name):
                 'type': item['type']
             })
     
-    # Convert to JSON safely
     encrypted_json = json.dumps(encrypted_data)
     
     html = f'''<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>{batch_name}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        * {{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }}
-
         :root {{
-            --bg-primary: #0a0a0a;
-            --bg-secondary: #141414;
-            --bg-card: #1e1e1e;
-            --text-primary: #ffffff;
-            --text-secondary: #a0a0a0;
-            --accent: #00ff88;
-            --accent-hover: #00cc6a;
-            --border: #2a2a2a;
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --accent: #f59e0b;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --border: #334155;
+            --radius: 12px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }}
 
+        /* Theme Variables */
         body.theme-light {{
-            --bg-primary: #ffffff;
-            --bg-secondary: #f5f5f5;
+            --bg-dark: #f0f9ff;
             --bg-card: #ffffff;
-            --text-primary: #1a1a1a;
-            --text-secondary: #666666;
-            --accent: #007aff;
-            --accent-hover: #0051d5;
-            --border: #e0e0e0;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
         }}
 
-        body.theme-sunset {{
-            --bg-primary: #1a0a0a;
-            --bg-secondary: #2a1515;
-            --bg-card: #3a2020;
-            --text-primary: #ffe0d0;
-            --text-secondary: #d0a090;
-            --accent: #ff6b35;
-            --accent-hover: #ff4500;
-            --border: #4a2525;
-        }}
-
-        body.theme-ocean {{
-            --bg-primary: #001520;
-            --bg-secondary: #002540;
-            --bg-card: #003560;
-            --text-primary: #e0f0ff;
-            --text-secondary: #a0c0d0;
-            --accent: #00d4ff;
-            --accent-hover: #00a8cc;
-            --border: #004570;
-        }}
-
-        body.theme-forest {{
-            --bg-primary: #0a1a0a;
-            --bg-secondary: #152a15;
-            --bg-card: #203a20;
-            --text-primary: #e0ffe0;
-            --text-secondary: #a0d0a0;
-            --accent: #4ade80;
-            --accent-hover: #22c55e;
-            --border: #254a25;
-        }}
-
-        body.theme-purple {{
-            --bg-primary: #1a0a2a;
-            --bg-secondary: #2a1540;
-            --bg-card: #3a2060;
-            --text-primary: #f0e0ff;
-            --text-secondary: #c0a0d0;
-            --accent: #a855f7;
-            --accent-hover: #9333ea;
-            --border: #4a2570;
+        body.theme-oled {{
+            --bg-dark: #000000;
+            --bg-card: #121212;
+            --border: #2c2c2c;
         }}
 
         body.theme-midnight {{
-            --bg-primary: #000814;
-            --bg-secondary: #001d3d;
-            --bg-card: #003566;
-            --text-primary: #ffc300;
-            --text-secondary: #ffd60a;
-            --accent: #ffd60a;
-            --accent-hover: #ffea00;
-            --border: #004080;
+            --bg-dark: #0b1021;
+            --bg-card: #151e32;
+            --primary: #7c3aed;
+            --border: #2d3748;
         }}
+
+        * {{ margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }}
 
         body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            transition: all 0.4s ease;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background-color 0.3s, color 0.3s;
         }}
 
-        #passwordScreen {{
+        /* Scrollbar */
+        ::-webkit-scrollbar {{ width: 6px; }}
+        ::-webkit-scrollbar-track {{ background: transparent; }}
+        ::-webkit-scrollbar-thumb {{ background: var(--border); border-radius: 10px; }}
+
+        /* --- Password Screen --- */
+        #auth-screen {{
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
+            inset: 0;
+            background: var(--bg-dark);
+            z-index: 9999;
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 9999;
-            animation: fadeIn 0.5s;
+            padding: 20px;
         }}
 
-        @keyframes fadeIn {{
-            from {{ opacity: 0; }}
-            to {{ opacity: 1; }}
-        }}
-
-        .password-box {{
+        .auth-card {{
             background: var(--bg-card);
-            padding: 50px;
-            border-radius: 25px;
-            box-shadow: 0 25px 70px rgba(0,0,0,0.5);
+            padding: 2.5rem;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 400px;
             text-align: center;
-            max-width: 450px;
-            width: 90%;
-            animation: slideUp 0.5s ease-out;
+            border: 1px solid var(--border);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }}
 
         @keyframes slideUp {{
-            from {{ transform: translateY(30px); opacity: 0; }}
+            from {{ transform: translateY(20px); opacity: 0; }}
             to {{ transform: translateY(0); opacity: 1; }}
         }}
 
-        .password-box h1 {{
-            color: var(--accent);
-            margin-bottom: 15px;
-            font-size: 2.5em;
-        }}
-
-        .password-box p {{
-            color: var(--text-secondary);
-            margin-bottom: 30px;
-        }}
-
-        .password-box input {{
-            width: 100%;
-            padding: 18px;
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            font-size: 17px;
-            margin-bottom: 20px;
-            transition: all 0.3s;
-        }}
-
-        .password-box input:focus {{
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(0,255,136,0.1);
-        }}
-
-        .password-box button {{
-            width: 100%;
-            padding: 18px;
-            background: var(--accent);
-            color: var(--bg-primary);
-            border: none;
-            border-radius: 12px;
-            font-size: 17px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-        }}
-
-        .password-box button:hover {{
-            background: var(--accent-hover);
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }}
-
-        #mainContent {{
-            display: none;
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 25px;
-            animation: fadeIn 0.6s;
-        }}
-
-        .header {{
-            text-align: center;
-            padding: 40px 30px;
-            background: var(--bg-card);
-            border-radius: 20px;
-            margin-bottom: 35px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-            border: 1px solid var(--border);
-        }}
-
-        .developer {{
-            color: var(--accent);
-            font-size: 15px;
-            margin-bottom: 12px;
-            font-weight: 600;
-            letter-spacing: 1px;
-        }}
-
-        .batch-name {{
-            font-size: 2.8em;
-            font-weight: 900;
-            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+        .auth-icon {{
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 25px;
-            line-height: 1.2;
         }}
 
-        .controls {{
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-bottom: 35px;
-        }}
-
-        .theme-btn {{
-            padding: 12px 24px;
-            background: var(--bg-card);
+        .auth-input {{
+            width: 100%;
+            padding: 16px;
+            background: var(--bg-dark);
             border: 2px solid var(--border);
-            border-radius: 12px;
-            color: var(--text-primary);
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 600;
-            font-size: 14px;
-        }}
-
-        .theme-btn:hover {{
-            border-color: var(--accent);
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-        }}
-
-        .theme-btn:active {{
-            transform: translateY(-1px);
-        }}
-
-        .stats {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 20px;
-            margin-bottom: 35px;
-        }}
-
-        .stat-card {{
-            background: var(--bg-card);
-            padding: 25px;
-            border-radius: 18px;
+            border-radius: var(--radius);
+            color: var(--text-main);
+            font-size: 1.1rem;
+            margin: 1.5rem 0;
             text-align: center;
-            border: 2px solid var(--border);
-            transition: all 0.4s;
+            letter-spacing: 2px;
+            transition: 0.3s;
+        }}
+
+        .auth-input:focus {{
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }}
+
+        .btn {{
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 700;
+            font-size: 1rem;
             cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }}
 
-        .stat-card:hover {{
-            border-color: var(--accent);
-            transform: translateY(-8px);
-            box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+        .btn-primary {{
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
         }}
 
-        .stat-number {{
-            font-size: 2.5em;
-            font-weight: 900;
-            color: var(--accent);
-            margin-bottom: 5px;
-        }}
+        .btn-primary:active {{ transform: scale(0.98); }}
 
-        .stat-label {{
-            color: var(--text-secondary);
-            font-size: 14px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }}
+        /* --- Main App UI --- */
+        #app-view {{ display: none; padding-bottom: 80px; }}
 
-        .category {{
-            background: var(--bg-card);
-            padding: 25px;
-            border-radius: 18px;
-            margin-bottom: 25px;
-            border: 2px solid var(--border);
-            transition: all 0.3s;
-        }}
-
-        .category:hover {{
-            border-color: var(--accent);
-        }}
-
-        .category-header {{
-            font-size: 1.6em;
-            font-weight: 800;
-            color: var(--accent);
-            margin-bottom: 20px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid var(--border);
-        }}
-
-        .item {{
-            background: var(--bg-secondary);
-            padding: 18px;
-            border-radius: 12px;
-            margin-bottom: 12px;
+        /* Header */
+        .app-header {{
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border: 2px solid var(--border);
-            transition: all 0.3s;
         }}
 
-        .item:hover {{
-            border-color: var(--accent);
-            transform: translateX(8px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        .header-title h1 {{
+            font-size: 1.25rem;
+            font-weight: 800;
+            background: linear-gradient(to right, var(--text-main), var(--text-sub));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }}
 
-        .item-title {{
-            flex: 1;
-            font-weight: 500;
-            margin-right: 15px;
-        }}
+        .header-credit {{ font-size: 0.75rem; color: var(--text-sub); }}
 
-        .item-badge {{
-            padding: 6px 18px;
-            border-radius: 25px;
-            font-size: 11px;
-            font-weight: 700;
-            margin-right: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }}
+        .header-actions {{ display: flex; gap: 10px; }}
 
-        .badge-video {{
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            color: white;
-        }}
-
-        .badge-pdf {{
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: white;
-        }}
-
-        .badge-image {{
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-            color: white;
-        }}
-
-        .badge-other {{
-            background: linear-gradient(135deg, #6b7280, #4b5563);
-            color: white;
-        }}
-
-        .item-btn {{
-            padding: 10px 24px;
-            background: var(--accent);
-            color: var(--bg-primary);
-            border: none;
-            border-radius: 10px;
+        .icon-btn {{
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 700;
-            font-size: 14px;
+            transition: 0.2s;
         }}
 
-        .item-btn:hover {{
-            background: var(--accent-hover);
-            transform: scale(1.05);
-        }}
+        .icon-btn:hover {{ background: var(--border); }}
 
-        #videoModal {{
-            display: none;
+        /* Theme Selector */
+        #theme-modal {{
             position: fixed;
-            top: 0;
+            bottom: -100%;
             left: 0;
             width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.97);
-            z-index: 10000;
-            padding: 25px;
-            animation: fadeIn 0.3s;
-        }}
-
-        .modal-content {{
-            position: relative;
-            max-width: 1000px;
-            margin: 0 auto;
-            padding-top: 70px;
-        }}
-
-        .modal-header {{
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            padding: 18px;
             background: var(--bg-card);
-            border-radius: 12px 12px 0 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid var(--border);
+            border-radius: 24px 24px 0 0;
+            padding: 24px;
+            z-index: 2000;
+            transition: bottom 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            border-top: 1px solid var(--border);
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
         }}
 
-        .back-btn {{
-            padding: 12px 25px;
-            background: var(--accent);
-            color: var(--bg-primary);
-            border: none;
-            border-radius: 10px;
+        #theme-modal.active {{ bottom: 0; }}
+
+        .theme-grid {{
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 20px;
+        }}
+
+        .theme-option {{
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            text-align: center;
             cursor: pointer;
-            font-weight: 700;
-            font-size: 15px;
-            transition: all 0.3s;
+            background: var(--bg-dark);
+            color: var(--text-main);
+            font-size: 0.9rem;
         }}
 
-        .back-btn:hover {{
-            background: var(--accent-hover);
-            transform: scale(1.05);
+        .theme-option.active {{ border-color: var(--primary); color: var(--primary); }}
+
+        /* Stats & Content */
+        .container {{ max-width: 800px; margin: 0 auto; padding: 20px; }}
+
+        .stats-row {{
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }}
+
+        .stat-chip {{
+            background: var(--bg-card);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            border: 1px solid var(--border);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }}
+
+        .stat-chip i {{ color: var(--primary); }}
+
+        .category-section {{ margin-bottom: 30px; }}
+
+        .cat-title {{
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-main);
+        }}
+
+        .cat-title::before {{
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: var(--accent);
+            border-radius: 2px;
+        }}
+
+        .item-card {{
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border: 1px solid var(--border);
+            transition: transform 0.2s, border-color 0.2s;
+            position: relative;
+            overflow: hidden;
+        }}
+
+        .item-card:active {{ transform: scale(0.98); }}
+
+        .item-icon {{
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }}
+
+        .icon-video {{ background: rgba(239, 68, 68, 0.1); color: #ef4444; }}
+        .icon-pdf {{ background: rgba(245, 158, 11, 0.1); color: #f59e0b; }}
+        .icon-img {{ background: rgba(34, 197, 94, 0.1); color: #22c55e; }}
+
+        .item-info {{ flex: 1; min-width: 0; }}
+
+        .item-title {{
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }}
+
+        .item-meta {{ font-size: 0.75rem; color: var(--text-sub); display: flex; align-items: center; gap: 6px; }}
+
+        .action-btn {{
+            background: var(--bg-dark);
+            color: var(--primary);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+        }}
+
+        /* --- Player View --- */
+        #player-view {{
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 5000;
+            display: none;
+            flex-direction: column;
+        }}
+
+        .video-wrapper {{
+            width: 100%;
+            background: #000;
+            position: relative;
+            flex-shrink: 0;
         }}
 
         video {{
             width: 100%;
-            border-radius: 12px;
-            background: #000;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            max-height: 50vh;
+            display: block;
         }}
 
-        .video-controls {{
-            margin-top: 18px;
-            display: flex;
+        .player-body {{
+            flex: 1;
+            background: var(--bg-dark);
+            padding: 24px;
+            overflow-y: auto;
+            border-radius: 24px 24px 0 0;
+            margin-top: -24px;
+            position: relative;
+            z-index: 10;
+        }}
+
+        .player-header {{ margin-bottom: 24px; }}
+
+        .player-title {{
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }}
+
+        .controls-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
             gap: 12px;
-            justify-content: center;
+            margin-bottom: 30px;
+        }}
+
+        .control-group {{
+            background: var(--bg-card);
+            padding: 16px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+        }}
+
+        .control-label {{
+            font-size: 0.75rem;
+            color: var(--text-sub);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }}
+
+        /* Custom Range Input */
+        input[type=range] {{
+            width: 100%;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }}
+
+        input[type=range]::-webkit-slider-thumb {{
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+        }}
+
+        /* Speed Buttons */
+        .speed-options {{
+            display: flex;
+            gap: 8px;
             flex-wrap: wrap;
         }}
 
-        .speed-btn {{
-            padding: 10px 18px;
-            background: var(--bg-card);
-            color: var(--text-primary);
-            border: 2px solid var(--border);
-            border-radius: 10px;
+        .speed-chip {{
+            padding: 6px 12px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.8rem;
             cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
+            flex: 1;
+            text-align: center;
         }}
 
-        .speed-btn:hover {{
-            border-color: var(--accent);
+        .speed-chip.active {{
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
         }}
 
-        .speed-btn.active {{
-            background: var(--accent);
-            border-color: var(--accent);
-            color: var(--bg-primary);
+        .back-btn-large {{
+            width: 100%;
+            padding: 18px;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            color: var(--text-main);
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            margin-top: auto;
         }}
 
-        @media (max-width: 768px) {{
-            .batch-name {{
-                font-size: 2em;
-            }}
-            
-            .stat-card {{
-                padding: 18px;
-            }}
-
-            .password-box {{
-                padding: 35px;
-            }}
-
-            .item {{
-                flex-direction: column;
-                gap: 10px;
-                align-items: flex-start;
-            }}
-
-            .item-btn {{
-                width: 100%;
-            }}
+        .back-btn-large:hover {{
+            border-color: var(--danger);
+            color: var(--danger);
         }}
+
+        /* Overlay */
+        #overlay {{
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 1500;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }}
+        #overlay.active {{ display: block; opacity: 1; }}
+
+        /* Animations */
+        @keyframes fadeIn {{ from {{ opacity: 0; }} to {{ opacity: 1; }} }}
+        .fade-in {{ animation: fadeIn 0.4s ease-out; }}
     </style>
 </head>
 <body>
-    <div id="passwordScreen">
-        <div class="password-box">
-            <h1>🔒</h1>
-            <p>This content is protected</p>
-            <input type="password" id="passwordInput" placeholder="Enter password" onkeypress="if(event.key==='Enter') checkPassword()">
-            <button onclick="checkPassword()">Unlock</button>
+
+    <!-- Auth Screen -->
+    <div id="auth-screen">
+        <div class="auth-card">
+            <div class="auth-icon"><i class="fas fa-lock"></i></div>
+            <h2>Protected Content</h2>
+            <p style="color: var(--text-sub); margin-top: 8px;">Enter password to access {batch_name}</p>
+            <input type="password" id="password-input" class="auth-input" placeholder="PASSWORD">
+            <button class="btn btn-primary" onclick="checkPassword()">
+                <i class="fas fa-unlock-alt"></i> Access Content
+            </button>
         </div>
     </div>
 
-    <div id="mainContent">
-        <div class="header">
-            <div class="developer">Developer - {credit_name}</div>
-            <div class="batch-name">{batch_name}</div>
+    <!-- Main App -->
+    <div id="app-view">
+        <div class="app-header">
+            <div class="header-title">
+                <h1>{batch_name}</h1>
+                <div class="header-credit">by {credit_name}</div>
+            </div>
+            <div class="header-actions">
+                <button class="icon-btn" onclick="toggleThemeModal()"><i class="fas fa-palette"></i></button>
+            </div>
         </div>
 
-        <div class="controls">
-            <button class="theme-btn" onclick="changeTheme('dark')">🌑 Dark</button>
-            <button class="theme-btn" onclick="changeTheme('light')">☀️ Light</button>
-            <button class="theme-btn" onclick="changeTheme('sunset')">🌅 Sunset</button>
-            <button class="theme-btn" onclick="changeTheme('ocean')">🌊 Ocean</button>
-            <button class="theme-btn" onclick="changeTheme('forest')">🌲 Forest</button>
-            <button class="theme-btn" onclick="changeTheme('purple')">💜 Purple</button>
-            <button class="theme-btn" onclick="changeTheme('midnight')">🌃 Midnight</button>
-        </div>
+        <div class="container">
+            <!-- Stats -->
+            <div class="stats-row" id="stats-bar">
+                <!-- Injected via JS -->
+            </div>
 
-        <div class="stats" id="stats"></div>
-        <div id="categories"></div>
+            <!-- Content -->
+            <div id="content-list"></div>
+        </div>
     </div>
 
-    <div id="videoModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button class="back-btn" onclick="closeVideo()">← Back</button>
-                <span id="videoTitle" style="color: var(--text-primary); font-weight: 600;"></span>
+    <!-- Player View (Full Screen) -->
+    <div id="player-view">
+        <div class="video-wrapper">
+            <video id="main-player" controls controlsList="nodownload" oncontextmenu="return false;">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+
+        <div class="player-body">
+            <div class="player-header">
+                <div class="player-title" id="player-title">Video Title</div>
+                <div style="color: var(--text-sub); font-size: 0.9rem;">
+                    <i class="fas fa-shield-alt"></i> Protected Content • No Download
+                </div>
             </div>
-            <video id="videoPlayer" controls></video>
-            <div class="video-controls">
-                <button class="speed-btn" onclick="setSpeed(0.5)">0.5x</button>
-                <button class="speed-btn" onclick="setSpeed(0.75)">0.75x</button>
-                <button class="speed-btn active" onclick="setSpeed(1)">1x</button>
-                <button class="speed-btn" onclick="setSpeed(1.25)">1.25x</button>
-                <button class="speed-btn" onclick="setSpeed(1.5)">1.5x</button>
-                <button class="speed-btn" onclick="setSpeed(2)">2x</button>
+
+            <div class="controls-grid">
+                <!-- Speed Control -->
+                <div class="control-group" style="grid-column: 1 / -1;">
+                    <div class="control-label"><i class="fas fa-tachometer-alt"></i> Playback Speed</div>
+                    <div class="speed-options">
+                        <button class="speed-chip" onclick="setSpeed(0.5)">0.5x</button>
+                        <button class="speed-chip" onclick="setSpeed(0.75)">0.75x</button>
+                        <button class="speed-chip active" onclick="setSpeed(1.0)">1.0x</button>
+                        <button class="speed-chip" onclick="setSpeed(1.25)">1.25x</button>
+                        <button class="speed-chip" onclick="setSpeed(1.5)">1.5x</button>
+                        <button class="speed-chip" onclick="setSpeed(2.0)">2.0x</button>
+                    </div>
+                </div>
+
+                <!-- Volume Control -->
+                <div class="control-group" style="grid-column: 1 / -1;">
+                    <div class="control-label">
+                        <i class="fas fa-volume-up"></i> Volume <span id="vol-val">100%</span>
+                    </div>
+                    <input type="range" min="0" max="1" step="0.1" value="1" oninput="setVolume(this.value)">
+                </div>
             </div>
+
+            <button class="back-btn-large" onclick="closePlayer()">
+                <i class="fas fa-arrow-left"></i> Return to List
+            </button>
+        </div>
+    </div>
+
+    <!-- Theme Modal -->
+    <div id="overlay" onclick="toggleThemeModal()"></div>
+    <div id="theme-modal">
+        <h3><i class="fas fa-paint-brush"></i> Choose Theme</h3>
+        <div class="theme-grid">
+            <div class="theme-option" onclick="setTheme('dark')">Dark</div>
+            <div class="theme-option" onclick="setTheme('light')">Light</div>
+            <div class="theme-option" onclick="setTheme('oled')">OLED</div>
+            <div class="theme-option" onclick="setTheme('midnight')">Midnight</div>
         </div>
     </div>
 
     <script>
-        const PASSWORD = "{password}";
-        const encryptedData = {encrypted_json};
+        // --- Data & Config ---
+        const CONFIG = {{
+            password: "{password}",
+            data: {encrypted_json}
+        }};
 
+        const state = {{
+            theme: localStorage.getItem('theme') || 'dark'
+        }};
+
+        // --- Init ---
+        function init() {{
+            setTheme(state.theme);
+            document.getElementById('password-input').addEventListener('keypress', (e) => {{
+                if (e.key === 'Enter') checkPassword();
+            }});
+        }}
+
+        // --- Auth ---
         function checkPassword() {{
-            const input = document.getElementById('passwordInput').value;
-            if (input === PASSWORD) {{
-                document.getElementById('passwordScreen').style.display = 'none';
-                document.getElementById('mainContent').style.display = 'block';
-                loadContent();
+            const input = document.getElementById('password-input');
+            if (input.value === CONFIG.password) {{
+                document.getElementById('auth-screen').style.opacity = '0';
+                setTimeout(() => {{
+                    document.getElementById('auth-screen').style.display = 'none';
+                    document.getElementById('app-view').style.display = 'block';
+                    loadContent();
+                }}, 300);
             }} else {{
-                alert('❌ Wrong Password!');
-                document.getElementById('passwordInput').value = '';
+                input.style.borderColor = 'var(--danger)';
+                input.classList.add('shake');
+                setTimeout(() => input.classList.remove('shake'), 500);
             }}
         }}
 
-        function decryptLink(encrypted) {{
+        // --- Crypto ---
+        function decrypt(str) {{
             try {{
-                const decoded = atob(encrypted);
-                const parts = decoded.split('|');
-                if (parts[1] === PASSWORD) {{
-                    return parts[0];
-                }}
-            }} catch(e) {{}}
-            return null;
+                const decoded = atob(str);
+                const [link, pass] = decoded.split('|');
+                return pass === CONFIG.password ? link : null;
+            }} catch (e) {{ return null; }}
         }}
 
+        // --- Content Renderer ---
         function loadContent() {{
-            let totalVideos = 0;
-            let totalPDFs = 0;
-            let totalImages = 0;
-            let totalOther = 0;
-            let totalItems = 0;
-
-            const categoriesDiv = document.getElementById('categories');
+            const container = document.getElementById('content-list');
+            const statsBar = document.getElementById('stats-bar');
             
-            for (const [category, items] of Object.entries(encryptedData)) {{
-                totalItems += items.length;
-                items.forEach(item => {{
-                    if (item.type === 'VIDEO') totalVideos++;
-                    else if (item.type === 'PDF') totalPDFs++;
-                    else if (item.type === 'IMAGE') totalImages++;
-                    else totalOther++;
-                }});
+            let stats = {{ video: 0, pdf: 0, image: 0, total: 0 }};
 
-                const categoryDiv = document.createElement('div');
-                categoryDiv.className = 'category';
-                categoryDiv.innerHTML = `<div class="category-header">${{category}}</div>`;
+            for (const [category, items] of Object.entries(CONFIG.data)) {{
+                const section = document.createElement('div');
+                section.className = 'category-section fade-in';
+
+                section.innerHTML = `<div class="cat-title">${{category}} <span style="font-size:0.8em; opacity:0.6; font-weight:400">(${{items.length}})</span></div>`;
 
                 items.forEach(item => {{
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = 'item';
+                    stats.total++;
+                    if(item.type === 'VIDEO') stats.video++;
+                    if(item.type === 'PDF') stats.pdf++;
+
+                    const el = document.createElement('div');
+                    el.className = 'item-card';
+                    el.onclick = () => openItem(item);
                     
-                    let badge = '';
-                    let buttonText = '📄 Open';
+                    let iconClass = 'fas fa-file';
+                    let iconType = 'icon-other';
+                    let actionText = 'OPEN';
                     
                     if (item.type === 'VIDEO') {{
-                        badge = '<span class="item-badge badge-video">VIDEO</span>';
-                        buttonText = '▶️ Play';
+                        iconClass = 'fas fa-play';
+                        iconType = 'icon-video';
+                        actionText = 'PLAY';
                     }} else if (item.type === 'PDF') {{
-                        badge = '<span class="item-badge badge-pdf">PDF</span>';
+                        iconClass = 'fas fa-file-pdf';
+                        iconType = 'icon-pdf';
+                        actionText = 'READ';
                     }} else if (item.type === 'IMAGE') {{
-                        badge = '<span class="item-badge badge-image">IMAGE</span>';
-                    }} else {{
-                        badge = '<span class="item-badge badge-other">FILE</span>';
+                        iconClass = 'fas fa-image';
+                        iconType = 'icon-img';
+                        actionText = 'VIEW';
                     }}
-                    
-                    itemDiv.innerHTML = `
-                        <div class="item-title">${{item.title}}</div>
-                        ${{badge}}
-                        <button class="item-btn" onclick='openLink("${{item.link}}", "${{item.title}}", "${{item.type}}")'>
-                            ${{buttonText}}
-                        </button>
+
+                    el.innerHTML = `
+                        <div class="item-icon ${{iconType}}"><i class="${{iconClass}}"></i></div>
+                        <div class="item-info">
+                            <div class="item-title">${{item.title}}</div>
+                            <div class="item-meta">${{item.type}}</div>
+                        </div>
+                        <div class="action-btn">${{actionText}}</div>
                     `;
-                    categoryDiv.appendChild(itemDiv);
+                    section.appendChild(el);
                 }});
 
-                categoriesDiv.appendChild(categoryDiv);
+                container.appendChild(section);
             }}
 
-            document.getElementById('stats').innerHTML = `
-                <div class="stat-card">
-                    <div class="stat-number">${{totalItems}}</div>
-                    <div class="stat-label">All Items</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${{totalVideos}}</div>
-                    <div class="stat-label">Videos</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${{totalPDFs}}</div>
-                    <div class="stat-label">PDFs</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${{totalImages}}</div>
-                    <div class="stat-label">Images</div>
-                </div>
+            // Render Stats
+            statsBar.innerHTML = `
+                <div class="stat-chip"><i class="fas fa-layer-group"></i> All ${{stats.total}}</div>
+                <div class="stat-chip"><i class="fas fa-video"></i> Video ${{stats.video}}</div>
+                <div class="stat-chip"><i class="fas fa-file-pdf"></i> PDF ${{stats.pdf}}</div>
             `;
         }}
 
-        function openLink(encrypted, title, type) {{
-            const link = decryptLink(encrypted);
-            if (!link) {{
-                alert('❌ Invalid link!');
-                return;
-            }}
+        // --- Actions ---
+        function openItem(item) {{
+            const link = decrypt(item.link);
+            if (!link) return alert('Decryption failed');
 
-            if (type === 'VIDEO') {{
-                document.getElementById('videoTitle').textContent = title;
-                document.getElementById('videoPlayer').src = link;
-                document.getElementById('videoModal').style.display = 'block';
+            if (item.type === 'VIDEO') {{
+                openPlayer(link, item.title);
             }} else {{
                 window.open(link, '_blank');
             }}
         }}
 
-        function closeVideo() {{
-            document.getElementById('videoModal').style.display = 'none';
-            document.getElementById('videoPlayer').pause();
-            document.getElementById('videoPlayer').src = '';
+        // --- Player Logic ---
+        const player = document.getElementById('main-player');
+
+        function openPlayer(url, title) {{
+            const view = document.getElementById('player-view');
+            document.getElementById('player-title').textContent = title;
+            player.src = url;
+            view.style.display = 'flex';
+            player.play();
         }}
 
-        function setSpeed(speed) {{
-            document.getElementById('videoPlayer').playbackRate = speed;
-            document.querySelectorAll('.speed-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+        function closePlayer() {{
+            document.getElementById('player-view').style.display = 'none';
+            player.pause();
+            player.src = '';
         }}
 
-        function changeTheme(theme) {{
-            document.body.className = theme === 'dark' ? '' : `theme-${{theme}}`;
-            localStorage.setItem('theme', theme);
+        function setSpeed(rate) {{
+            player.playbackRate = rate;
+            document.querySelectorAll('.speed-chip').forEach(c => {{
+                c.classList.toggle('active', parseFloat(c.innerText) === rate);
+            }});
         }}
 
-        // Load saved theme
-        window.onload = function() {{
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme && savedTheme !== 'dark') {{
-                document.body.className = `theme-${{savedTheme}}`;
+        function setVolume(val) {{
+            player.volume = val;
+            document.getElementById('vol-val').textContent = Math.round(val * 100) + '%';
+        }}
+
+        // --- Theme Logic ---
+        function toggleThemeModal() {{
+            const modal = document.getElementById('theme-modal');
+            const overlay = document.getElementById('overlay');
+            const isActive = modal.classList.contains('active');
+
+            if (isActive) {{
+                modal.classList.remove('active');
+                overlay.classList.remove('active');
+            }} else {{
+                modal.classList.add('active');
+                overlay.classList.add('active');
             }}
-        }};
+        }}
+
+        function setTheme(themeName) {{
+            document.body.className = `theme-${{themeName}}`;
+            localStorage.setItem('theme', themeName);
+
+            // Highlight active
+            document.querySelectorAll('.theme-option').forEach(opt => {{
+                opt.classList.toggle('active', opt.textContent.toLowerCase() === themeName);
+            }});
+
+            if (document.getElementById('theme-modal').classList.contains('active')) {{
+                toggleThemeModal();
+            }}
+        }}
+
+        init();
     </script>
 </body>
 </html>'''
@@ -897,16 +869,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     welcome_text = (
-        "🎉 Welcome to SUPER PARSER HTML Bot!\n\n"
+        "🎉 Welcome to PREMIUM HTML Bot!\n\n"
         "✨ Features:\n"
         "• 🔒 Password Protection\n"
-        "• 🎨 7 Beautiful Themes\n"
-        "• 🎬 Video Player\n"
-        "• 📱 Mobile-Friendly\n"
+        "• 🎨 Premium Dark UI\n"
+        "• 🎬 Advanced Video Player\n"
+        "• 📱 App-like Experience\n"
         "• 🔐 Encrypted Links\n"
-        "• 🧠 SUPER ROBUST Parser\n"
-        "• 🎥 YouTube Support\n"
-        "• ⚡ Detects ALL Links (800+)\n\n"
+        "• ⚡ Fast & Lightweight\n\n"
         "Click below to start! 👇"
     )
     
@@ -938,7 +908,7 @@ async def receive_txt_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Receive TXT file"""
     user_id = update.effective_user.id
     
-    await update.message.reply_text("⏳ Reading file with SUPER PARSER...")
+    await update.message.reply_text("⏳ Reading file...")
     
     try:
         # Download and read file
@@ -965,23 +935,14 @@ async def receive_txt_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Count items
         total = sum(len(items) for items in categories.values())
         total_videos = sum(1 for cat in categories.values() for item in cat if item['type'] == 'VIDEO')
-        total_pdfs = sum(1 for cat in categories.values() for item in cat if item['type'] == 'PDF')
         
         # Show preview
         preview_text = "✅ File parsed successfully!\n\n📊 Detection:\n"
         preview_text += f"📦 Categories: {len(categories)}\n"
         preview_text += f"📊 Total Items: {total}\n"
-        preview_text += f"🎬 Videos: {total_videos}\n"
-        preview_text += f"📄 PDFs: {total_pdfs}\n\n"
+        preview_text += f"🎬 Videos: {total_videos}\n\n"
         
-        # Show first 3 categories
-        for idx, (cat, items) in enumerate(list(categories.items())[:3]):
-            preview_text += f"\n{idx+1}. {cat}: {len(items)} items"
-        
-        if len(categories) > 3:
-            preview_text += f"\n...and {len(categories) - 3} more"
-        
-        preview_text += "\n\n🔐 Step 2: Set Password\n\nHTML password enter करें:"
+        preview_text += "\n🔐 Step 2: Set Password\n\nHTML password enter करें:"
         
         await update.message.reply_text(preview_text)
         return PASSWORD
@@ -1058,8 +1019,7 @@ async def receive_credit_name(update: Update, context: ContextTypes.DEFAULT_TYPE
         f"🔒 Password: {user_data['password']}\n"
         f"📚 Batch: {user_data['batch_name']}\n"
         f"👨‍💻 Credit: {credit_name}\n"
-        f"📊 Categories: {len(user_data['categories'])}\n"
-        f"📊 Total Items: {total_items}\n\n"
+        f"📊 Items: {total_items}\n\n"
         "Click Convert! 👇"
     )
     
@@ -1106,9 +1066,7 @@ async def process_conversion(update: Update, context: ContextTypes.DEFAULT_TYPE)
             f"🔒 Password: {user_data['password']}\n"
             f"📚 Batch: {user_data['batch_name']}\n"
             f"👨‍💻 Credit: {user_data['credit_name']}\n"
-            f"📊 Items: {total}\n\n"
-            f"⚡ All {total} links detected!\n"
-            f"🎨 7 themes available!"
+            f"📊 Items: {total}\n"
         )
         
         with open(filename, 'rb') as f:
