@@ -7,15 +7,14 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, ConversationHandler, CallbackQueryHandler
 
 # States for conversation
-TXT_FILE, PASSWORD, BATCH_NAME, CREDIT_NAME, CONFIRM = range(5)
+TXT_FILE, BATCH_NAME, CREDIT_NAME, CONFIRM = range(4)
 
 # Store user data temporarily
 user_data_store = {}
 
-def encrypt_link(link, password):
-    """Encrypt link using password-based key"""
-    key = hashlib.sha256(password.encode()).digest()
-    encrypted = base64.b64encode((link + "|" + password).encode()).decode()
+def encrypt_link(link):
+    """Simple encoding for link (No Password)"""
+    encrypted = base64.b64encode(link.encode()).decode()
     return encrypted
 
 def detect_file_type(link):
@@ -103,7 +102,7 @@ def parse_txt_content(content):
 
     return categories
 
-def generate_html(categories, password, batch_name, credit_name):
+def generate_html(categories, batch_name, credit_name):
     """Generate Premium UI HTML"""
     
     # Encrypt data
@@ -113,7 +112,7 @@ def generate_html(categories, password, batch_name, credit_name):
         for item in items:
             encrypted_data[category].append({
                 'title': item['title'],
-                'link': encrypt_link(item['link'], password),
+                'link': encrypt_link(item['link']),
                 'type': item['type']
             })
     
@@ -177,90 +176,6 @@ def generate_html(categories, password, batch_name, credit_name):
         ::-webkit-scrollbar {{ width: 6px; }}
         ::-webkit-scrollbar-track {{ background: transparent; }}
         ::-webkit-scrollbar-thumb {{ background: var(--text-muted); opacity: 0.3; border-radius: 10px; }}
-
-        /* --- Auth Screen --- */
-        #auth-screen {{
-            position: fixed;
-            inset: 0;
-            background: var(--bg-body);
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }}
-
-        .auth-card {{
-            background: var(--surface-glass);
-            backdrop-filter: blur(20px);
-            padding: 3rem;
-            border-radius: 30px;
-            width: 100%;
-            max-width: 380px;
-            text-align: center;
-            border: 1px solid var(--border);
-            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
-            animation: floatIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }}
-
-        @keyframes floatIn {{
-            from {{ opacity: 0; transform: translateY(40px) scale(0.95); }}
-            to {{ opacity: 1; transform: translateY(0) scale(1); }}
-        }}
-
-        .auth-icon-wrapper {{
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 1.5rem;
-            background: var(--gradient-1);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            color: white;
-            box-shadow: 0 10px 20px var(--primary-glow);
-        }}
-
-        .auth-input {{
-            width: 100%;
-            padding: 18px;
-            background: rgba(0,0,0,0.2);
-            border: 2px solid transparent;
-            border-radius: var(--radius-md);
-            color: var(--text-main);
-            font-size: 1.2rem;
-            margin: 1.5rem 0;
-            text-align: center;
-            letter-spacing: 4px;
-            font-weight: 700;
-            transition: 0.3s;
-        }}
-
-        body.theme-light .auth-input {{ background: rgba(0,0,0,0.05); }}
-
-        .auth-input:focus {{
-            background: transparent;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px var(--primary-glow);
-            outline: none;
-        }}
-
-        .btn-grad {{
-            width: 100%;
-            padding: 18px;
-            border: none;
-            border-radius: var(--radius-md);
-            background: var(--gradient-1);
-            color: white;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            box-shadow: 0 4px 15px var(--primary-glow);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }}
-
-        .btn-grad:active {{ transform: scale(0.97); }}
 
         /* --- Header --- */
         .app-header {{
@@ -584,27 +499,8 @@ def generate_html(categories, password, batch_name, credit_name):
 </head>
 <body>
 
-    <!-- Auth Screen -->
-    <div id="auth-screen">
-        <div class="auth-card">
-            <div class="auth-icon-wrapper">
-                <i class="fas fa-lock"></i>
-            </div>
-            <h2 style="margin-bottom: 10px;">Protected Content</h2>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">
-                Enter access code for<br><strong>{batch_name}</strong>
-            </p>
-
-            <input type="password" id="password-input" class="auth-input" placeholder="••••" maxlength="8">
-
-            <button class="btn-grad" onclick="checkPassword()">
-                UNLOCK ACCESS
-            </button>
-        </div>
-    </div>
-
     <!-- Main Application -->
-    <div id="app-view" style="display: none;">
+    <div id="app-view">
         <header class="app-header">
             <div class="brand">
                 <i class="fas fa-cube" style="color: var(--primary); margin-right: 8px;"></i>Hub
@@ -711,7 +607,6 @@ def generate_html(categories, password, batch_name, credit_name):
     <script>
         // --- Data & Config ---
         const CONFIG = {{
-            password: "{password}",
             data: {encrypted_json}
         }};
 
@@ -722,34 +617,13 @@ def generate_html(categories, password, batch_name, credit_name):
         // --- Init ---
         function init() {{
             setTheme(state.theme);
-            document.getElementById('password-input').addEventListener('keypress', (e) => {{
-                if (e.key === 'Enter') checkPassword();
-            }});
-        }}
-
-        // --- Auth ---
-        function checkPassword() {{
-            const input = document.getElementById('password-input');
-            if (input.value === CONFIG.password) {{
-                document.getElementById('auth-screen').style.opacity = '0';
-                setTimeout(() => {{
-                    document.getElementById('auth-screen').style.display = 'none';
-                    document.getElementById('app-view').style.display = 'block';
-                    loadContent();
-                }}, 300);
-            }} else {{
-                input.style.borderColor = 'var(--danger)';
-                input.classList.add('shake');
-                setTimeout(() => input.classList.remove('shake'), 500);
-            }}
+            loadContent();
         }}
 
         // --- Crypto ---
         function decrypt(str) {{
             try {{
-                const decoded = atob(str);
-                const [link, pass] = decoded.split('|');
-                return pass === CONFIG.password ? link : null;
+                return atob(str);
             }} catch (e) {{ return null; }}
         }}
 
@@ -897,11 +771,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_text = (
         "🎉 Welcome to PREMIUM HTML Bot!\n\n"
         "✨ Features:\n"
-        "• 🔒 Password Protection\n"
         "• 🎨 Premium Dark UI\n"
         "• 🎬 Advanced Video Player\n"
         "• 📱 App-like Experience\n"
-        "• 🔐 Encrypted Links\n"
         "• ⚡ Fast & Lightweight\n\n"
         "Click below to start! 👇"
     )
@@ -968,10 +840,10 @@ async def receive_txt_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         preview_text += f"📊 Total Items: {total}\n"
         preview_text += f"🎬 Videos: {total_videos}\n\n"
         
-        preview_text += "\n🔐 Step 2: Set Password\n\nHTML password enter करें:"
+        preview_text += "\n📚 Step 2: Batch Name\n\nBatch name enter करें:"
         
         await update.message.reply_text(preview_text)
-        return PASSWORD
+        return BATCH_NAME
         
     except Exception as e:
         await update.message.reply_text(
@@ -979,30 +851,6 @@ async def receive_txt_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "कृपया valid TXT file भेजें!"
         )
         return TXT_FILE
-
-async def receive_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Receive password"""
-    user_id = update.effective_user.id
-    password = update.message.text.strip()
-    
-    if len(password) < 4:
-        await update.message.reply_text("❌ Password कम से कम 4 characters का होना चाहिए!")
-        return PASSWORD
-    
-    if user_id not in user_data_store:
-        await update.message.reply_text("❌ Error! /start से फिर शुरू करें।")
-        return ConversationHandler.END
-    
-    user_data_store[user_id]['password'] = password
-    
-    msg = (
-        f"✅ Password set: {password}\n\n"
-        f"📚 Step 3: Batch Name\n\n"
-        f"Batch name enter करें:"
-    )
-    
-    await update.message.reply_text(msg)
-    return BATCH_NAME
 
 async def receive_batch_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Receive batch name"""
@@ -1042,7 +890,6 @@ async def receive_credit_name(update: Update, context: ContextTypes.DEFAULT_TYPE
     msg = (
         "✅ All details received!\n\n"
         "📋 Summary:\n"
-        f"🔒 Password: {user_data['password']}\n"
         f"📚 Batch: {user_data['batch_name']}\n"
         f"👨‍💻 Credit: {credit_name}\n"
         f"📊 Items: {total_items}\n\n"
@@ -1073,7 +920,6 @@ async def process_conversion(update: Update, context: ContextTypes.DEFAULT_TYPE)
         # Generate HTML
         html_content = generate_html(
             user_data['categories'],
-            user_data['password'],
             user_data['batch_name'],
             user_data['credit_name']
         )
@@ -1089,7 +935,6 @@ async def process_conversion(update: Update, context: ContextTypes.DEFAULT_TYPE)
         total = sum(len(items) for items in user_data['categories'].values())
         caption = (
             f"✅ HTML File Ready!\n\n"
-            f"🔒 Password: {user_data['password']}\n"
             f"📚 Batch: {user_data['batch_name']}\n"
             f"👨‍💻 Credit: {user_data['credit_name']}\n"
             f"📊 Items: {total}\n"
@@ -1155,7 +1000,6 @@ def main():
         ],
         states={
             TXT_FILE: [MessageHandler(filters.Document.ALL, receive_txt_file)],
-            PASSWORD: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_password)],
             BATCH_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_batch_name)],
             CREDIT_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_credit_name)],
             CONFIRM: [CallbackQueryHandler(process_conversion, pattern='^convert$')],
