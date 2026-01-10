@@ -215,532 +215,538 @@ def generate_html(categories, password, batch_name, credit_name):
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{batch_name}</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
         * {{
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }}
 
         :root {{
-            --bg-primary: #0a0a0a;
-            --bg-secondary: #141414;
-            --bg-card: #1e1e1e;
-            --text-primary: #ffffff;
-            --text-secondary: #a0a0a0;
-            --accent: #00ff88;
-            --accent-hover: #00cc6a;
-            --border: #2a2a2a;
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #38bdf8;
+            --accent-hover: #0ea5e9;
+            --border: #475569;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --warning: #eab308;
         }}
 
         body.theme-light {{
-            --bg-primary: #ffffff;
-            --bg-secondary: #f5f5f5;
-            --bg-card: #ffffff;
-            --text-primary: #1a1a1a;
-            --text-secondary: #666666;
-            --accent: #007aff;
-            --accent-hover: #0051d5;
-            --border: #e0e0e0;
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-card: #f1f5f9;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --accent: #0284c7;
+            --accent-hover: #0369a1;
+            --border: #e2e8f0;
         }}
 
-        body.theme-sunset {{
-            --bg-primary: #1a0a0a;
-            --bg-secondary: #2a1515;
-            --bg-card: #3a2020;
-            --text-primary: #ffe0d0;
-            --text-secondary: #d0a090;
-            --accent: #ff6b35;
-            --accent-hover: #ff4500;
-            --border: #4a2525;
-        }}
-
-        body.theme-ocean {{
-            --bg-primary: #001520;
-            --bg-secondary: #002540;
-            --bg-card: #003560;
-            --text-primary: #e0f0ff;
-            --text-secondary: #a0c0d0;
-            --accent: #00d4ff;
-            --accent-hover: #00a8cc;
-            --border: #004570;
-        }}
-
-        body.theme-forest {{
-            --bg-primary: #0a1a0a;
-            --bg-secondary: #152a15;
-            --bg-card: #203a20;
-            --text-primary: #e0ffe0;
-            --text-secondary: #a0d0a0;
-            --accent: #4ade80;
-            --accent-hover: #22c55e;
-            --border: #254a25;
-        }}
-
-        body.theme-purple {{
-            --bg-primary: #1a0a2a;
-            --bg-secondary: #2a1540;
-            --bg-card: #3a2060;
-            --text-primary: #f0e0ff;
-            --text-secondary: #c0a0d0;
-            --accent: #a855f7;
-            --accent-hover: #9333ea;
-            --border: #4a2570;
-        }}
-
-        body.theme-midnight {{
-            --bg-primary: #000814;
-            --bg-secondary: #001d3d;
-            --bg-card: #003566;
-            --text-primary: #ffc300;
-            --text-secondary: #ffd60a;
-            --accent: #ffd60a;
-            --accent-hover: #ffea00;
-            --border: #004080;
+        body.theme-amoled {{
+            --bg-primary: #000000;
+            --bg-secondary: #111111;
+            --bg-card: #1a1a1a;
+            --text-primary: #ffffff;
+            --text-secondary: #888888;
+            --accent: #ffffff;
+            --accent-hover: #cccccc;
+            --border: #333333;
         }}
 
         body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: var(--bg-primary);
             color: var(--text-primary);
-            transition: all 0.4s ease;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            min-height: 100vh;
+            overflow-x: hidden;
         }}
 
+        /* Password Screen */
         #passwordScreen {{
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
+            inset: 0;
+            background: var(--bg-primary);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 9999;
-            animation: fadeIn 0.5s;
-        }}
-
-        @keyframes fadeIn {{
-            from {{ opacity: 0; }}
-            to {{ opacity: 1; }}
         }}
 
         .password-box {{
-            background: var(--bg-card);
-            padding: 50px;
-            border-radius: 25px;
-            box-shadow: 0 25px 70px rgba(0,0,0,0.5);
-            text-align: center;
-            max-width: 450px;
+            background: var(--bg-secondary);
+            padding: 2rem;
+            border-radius: 1.5rem;
             width: 90%;
-            animation: slideUp 0.5s ease-out;
-        }}
-
-        @keyframes slideUp {{
-            from {{ transform: translateY(30px); opacity: 0; }}
-            to {{ transform: translateY(0); opacity: 1; }}
+            max-width: 400px;
+            text-align: center;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
         }}
 
         .password-box h1 {{
-            color: var(--accent);
-            margin-bottom: 15px;
-            font-size: 2.5em;
+            font-size: 3rem;
+            margin-bottom: 1rem;
         }}
 
         .password-box p {{
             color: var(--text-secondary);
-            margin-bottom: 30px;
+            margin-bottom: 2rem;
+        }}
+
+        .input-group {{
+            position: relative;
+            margin-bottom: 1.5rem;
         }}
 
         .password-box input {{
             width: 100%;
-            padding: 18px;
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            background: var(--bg-secondary);
+            padding: 1rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
             color: var(--text-primary);
-            font-size: 17px;
-            margin-bottom: 20px;
-            transition: all 0.3s;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
         }}
 
         .password-box input:focus {{
-            outline: none;
             border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(0,255,136,0.1);
         }}
 
         .password-box button {{
             width: 100%;
-            padding: 18px;
+            padding: 1rem;
             background: var(--accent);
-            color: var(--bg-primary);
+            color: white;
             border: none;
-            border-radius: 12px;
-            font-size: 17px;
-            font-weight: bold;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            font-size: 1rem;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: transform 0.1s;
         }}
 
-        .password-box button:hover {{
-            background: var(--accent-hover);
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        .password-box button:active {{
+            transform: scale(0.98);
         }}
 
+        /* Shake Animation */
+        @keyframes shake {{
+            0%, 100% {{ transform: translateX(0); }}
+            10%, 30%, 50%, 70%, 90% {{ transform: translateX(-5px); }}
+            20%, 40%, 60%, 80% {{ transform: translateX(5px); }}
+        }}
+
+        .shake {{
+            animation: shake 0.5s;
+            border-color: var(--danger) !important;
+        }}
+
+        /* Main Content */
         #mainContent {{
-            display: none;
-            max-width: 1400px;
+            display: none; /* Hidden by default */
+            max-width: 800px;
             margin: 0 auto;
-            padding: 25px;
-            animation: fadeIn 0.6s;
+            padding: 1.5rem;
+            padding-bottom: 100px; /* Space for bottom content if needed */
         }}
 
         .header {{
             text-align: center;
-            padding: 40px 30px;
-            background: var(--bg-card);
-            border-radius: 20px;
-            margin-bottom: 35px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            margin-bottom: 2rem;
+            padding: 2rem 1rem;
+            background: var(--bg-secondary);
+            border-radius: 1.5rem;
             border: 1px solid var(--border);
         }}
 
-        .developer {{
-            color: var(--accent);
-            font-size: 15px;
-            margin-bottom: 12px;
-            font-weight: 600;
-            letter-spacing: 1px;
-        }}
-
         .batch-name {{
-            font-size: 2.8em;
-            font-weight: 900;
-            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, var(--accent), #a855f7);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 25px;
-            line-height: 1.2;
         }}
 
-        .controls {{
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-bottom: 35px;
+        .developer {{
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
         }}
 
-        .theme-btn {{
-            padding: 12px 24px;
-            background: var(--bg-card);
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            color: var(--text-primary);
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 600;
-            font-size: 14px;
-        }}
-
-        .theme-btn:hover {{
-            border-color: var(--accent);
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-        }}
-
-        .theme-btn:active {{
-            transform: translateY(-1px);
-        }}
-
+        /* Stats Grid */
         .stats {{
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 20px;
-            margin-bottom: 35px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
         }}
 
         .stat-card {{
-            background: var(--bg-card);
-            padding: 25px;
-            border-radius: 18px;
+            background: var(--bg-secondary);
+            padding: 1.25rem;
+            border-radius: 1rem;
             text-align: center;
-            border: 2px solid var(--border);
-            transition: all 0.4s;
-            cursor: pointer;
-        }}
-
-        .stat-card:hover {{
-            border-color: var(--accent);
-            transform: translateY(-8px);
-            box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
         }}
 
         .stat-number {{
-            font-size: 2.5em;
-            font-weight: 900;
-            color: var(--accent);
-            margin-bottom: 5px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
         }}
 
         .stat-label {{
+            font-size: 0.75rem;
             color: var(--text-secondary);
-            font-size: 14px;
-            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.05em;
+            margin-top: 0.25rem;
         }}
 
-        .category {{
-            background: var(--bg-card);
-            padding: 25px;
-            border-radius: 18px;
-            margin-bottom: 25px;
-            border: 2px solid var(--border);
-            transition: all 0.3s;
+        /* Theme Selector */
+        .theme-scroll {{
+            display: flex;
+            gap: 0.75rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            margin-bottom: 2rem;
+            scrollbar-width: none;
         }}
 
-        .category:hover {{
+        .theme-scroll::-webkit-scrollbar {{
+            display: none;
+        }}
+
+        .theme-btn {{
+            white-space: nowrap;
+            padding: 0.6rem 1.2rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 2rem;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }}
+
+        .theme-btn.active, .theme-btn:hover {{
+            background: var(--accent);
+            color: white;
             border-color: var(--accent);
         }}
 
+        /* Categories & Items */
+        .category {{
+            margin-bottom: 2rem;
+        }}
+
         .category-header {{
-            font-size: 1.6em;
-            font-weight: 800;
-            color: var(--accent);
-            margin-bottom: 20px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid var(--border);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }}
+
+        .category-header::before {{
+            content: '';
+            width: 4px;
+            height: 1.2rem;
+            background: var(--accent);
+            border-radius: 2px;
         }}
 
         .item {{
             background: var(--bg-secondary);
-            padding: 18px;
-            border-radius: 12px;
-            margin-bottom: 12px;
+            padding: 1rem;
+            border-radius: 1rem;
+            margin-bottom: 0.75rem;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            border: 2px solid var(--border);
-            transition: all 0.3s;
+            gap: 1rem;
+            border: 1px solid var(--border);
+            transition: transform 0.2s;
+            cursor: pointer;
         }}
 
-        .item:hover {{
-            border-color: var(--accent);
-            transform: translateX(8px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        .item:active {{
+            transform: scale(0.98);
+        }}
+
+        .item-icon {{
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }}
+
+        .type-video .item-icon {{ background: rgba(239, 68, 68, 0.1); color: var(--danger); }}
+        .type-pdf .item-icon {{ background: rgba(234, 179, 8, 0.1); color: var(--warning); }}
+        .type-image .item-icon {{ background: rgba(168, 85, 247, 0.1); color: #a855f7; }}
+        .type-other .item-icon {{ background: rgba(148, 163, 184, 0.1); color: var(--text-secondary); }}
+
+        .item-content {{
+            flex: 1;
+            min-width: 0;
         }}
 
         .item-title {{
-            flex: 1;
             font-weight: 500;
-            margin-right: 15px;
+            font-size: 0.95rem;
+            margin-bottom: 0.2rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }}
 
-        .item-badge {{
-            padding: 6px 18px;
-            border-radius: 25px;
-            font-size: 11px;
-            font-weight: 700;
-            margin-right: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        .item-meta {{
+            font-size: 0.75rem;
+            color: var(--text-secondary);
         }}
 
-        .badge-video {{
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            color: white;
+        .item-action {{
+            color: var(--text-secondary);
         }}
 
-        .badge-pdf {{
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: white;
-        }}
-
-        .badge-image {{
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-            color: white;
-        }}
-
-        .badge-other {{
-            background: linear-gradient(135deg, #6b7280, #4b5563);
-            color: white;
-        }}
-
-        .item-btn {{
-            padding: 10px 24px;
-            background: var(--accent);
-            color: var(--bg-primary);
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 700;
-            font-size: 14px;
-        }}
-
-        .item-btn:hover {{
-            background: var(--accent-hover);
-            transform: scale(1.05);
-        }}
-
+        /* Video Modal - Improved */
         #videoModal {{
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.97);
+            inset: 0;
+            background: #000;
             z-index: 10000;
-            padding: 25px;
-            animation: fadeIn 0.3s;
+            flex-direction: column;
         }}
 
-        .modal-content {{
-            position: relative;
-            max-width: 1000px;
-            margin: 0 auto;
-            padding-top: 70px;
-        }}
-
-        .modal-header {{
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            padding: 18px;
-            background: var(--bg-card);
-            border-radius: 12px 12px 0 0;
+        #videoModal.active {{
             display: flex;
-            justify-content: space-between;
+        }}
+
+        /* Video Container to take available space */
+        .video-container {{
+            flex: 1;
+            display: flex;
             align-items: center;
-            border-bottom: 2px solid var(--border);
-        }}
-
-        .back-btn {{
-            padding: 12px 25px;
-            background: var(--accent);
-            color: var(--bg-primary);
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 15px;
-            transition: all 0.3s;
-        }}
-
-        .back-btn:hover {{
-            background: var(--accent-hover);
-            transform: scale(1.05);
+            justify-content: center;
+            width: 100%;
+            background: #000;
+            position: relative;
         }}
 
         video {{
             width: 100%;
-            border-radius: 12px;
-            background: #000;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            max-height: 100%;
+            object-fit: contain;
         }}
 
-        .video-controls {{
-            margin-top: 18px;
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            flex-wrap: wrap;
+        /* Controls Section Below Video */
+        .modal-controls {{
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-top: 1px solid var(--border);
+            flex-shrink: 0; /* Don't shrink */
         }}
 
-        .speed-btn {{
-            padding: 10px 18px;
-            background: var(--bg-card);
-            color: var(--text-primary);
-            border: 2px solid var(--border);
-            border-radius: 10px;
-            cursor: pointer;
+        .modal-info {{
+            margin-bottom: 1.5rem;
+        }}
+
+        .modal-title {{
+            font-size: 1rem;
             font-weight: 600;
-            transition: all 0.3s;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }}
 
-        .speed-btn:hover {{
-            border-color: var(--accent);
+        .control-group {{
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
         }}
 
-        .speed-btn.active {{
+        .control-row {{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }}
+
+        .speed-control, .volume-control {{
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--bg-primary);
+            padding: 0.5rem;
+            border-radius: 0.75rem;
+            flex: 1;
+            justify-content: center;
+        }}
+
+        .control-label {{
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }}
+
+        .control-btn {{
+            background: var(--bg-card);
+            border: none;
+            color: var(--text-primary);
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }}
+
+        .control-btn:active {{
             background: var(--accent);
-            border-color: var(--accent);
-            color: var(--bg-primary);
+            color: white;
         }}
 
-        @media (max-width: 768px) {{
-            .batch-name {{
-                font-size: 2em;
+        .close-btn {{
+            width: 100%;
+            padding: 1rem;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            font-weight: 600;
+            font-size: 1rem;
+            margin-top: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }}
+
+        .close-btn:active {{
+            background: var(--bg-card);
+        }}
+
+        @media (min-width: 768px) {{
+            #videoModal {{
+                padding: 2rem;
+                background: rgba(0,0,0,0.9);
+                align-items: center;
+                justify-content: center;
             }}
             
-            .stat-card {{
-                padding: 18px;
-            }}
-
-            .password-box {{
-                padding: 35px;
-            }}
-
-            .item {{
-                flex-direction: column;
-                gap: 10px;
-                align-items: flex-start;
-            }}
-
-            .item-btn {{
+            .modal-content-wrapper {{
                 width: 100%;
+                max-width: 1000px;
+                background: var(--bg-secondary);
+                border-radius: 1.5rem;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+                max-height: 90vh;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            }}
+
+            .video-container {{
+                height: 60vh;
+                background: #000;
+            }}
+
+            .modal-controls {{
+                background: var(--bg-secondary);
             }}
         }}
     </style>
 </head>
-<body>
+<body class="theme-default">
+    <!-- Password Screen -->
     <div id="passwordScreen">
         <div class="password-box">
             <h1>🔒</h1>
-            <p>This content is protected</p>
-            <input type="password" id="passwordInput" placeholder="Enter password" onkeypress="if(event.key==='Enter') checkPassword()">
-            <button onclick="checkPassword()">Unlock</button>
+            <p>Protected Content</p>
+            <div class="input-group">
+                <input type="password" id="passwordInput" placeholder="Enter Password" onkeypress="if(event.key==='Enter') checkPassword()">
+            </div>
+            <button onclick="checkPassword()">Unlock Access</button>
         </div>
     </div>
 
+    <!-- Main Content -->
     <div id="mainContent">
         <div class="header">
-            <div class="developer">Developer - {credit_name}</div>
             <div class="batch-name">{batch_name}</div>
+            <div class="developer">Curated by {credit_name}</div>
         </div>
 
-        <div class="controls">
-            <button class="theme-btn" onclick="changeTheme('dark')">🌑 Dark</button>
-            <button class="theme-btn" onclick="changeTheme('light')">☀️ Light</button>
-            <button class="theme-btn" onclick="changeTheme('sunset')">🌅 Sunset</button>
-            <button class="theme-btn" onclick="changeTheme('ocean')">🌊 Ocean</button>
-            <button class="theme-btn" onclick="changeTheme('forest')">🌲 Forest</button>
-            <button class="theme-btn" onclick="changeTheme('purple')">💜 Purple</button>
-            <button class="theme-btn" onclick="changeTheme('midnight')">🌃 Midnight</button>
+        <div class="theme-scroll">
+            <button class="theme-btn active" onclick="setTheme('default')">Dark</button>
+            <button class="theme-btn" onclick="setTheme('light')">Light</button>
+            <button class="theme-btn" onclick="setTheme('amoled')">Amoled</button>
         </div>
 
-        <div class="stats" id="stats"></div>
+        <div class="stats"></div>
+
         <div id="categories"></div>
     </div>
 
+    <!-- Video Modal -->
     <div id="videoModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button class="back-btn" onclick="closeVideo()">← Back</button>
-                <span id="videoTitle" style="color: var(--text-primary); font-weight: 600;"></span>
+        <!-- Wrapper for desktop styling -->
+        <div class="modal-content-wrapper">
+            <div class="video-container">
+                <video id="videoPlayer" controls controlsList="nodownload"></video>
             </div>
-            <video id="videoPlayer" controls></video>
-            <div class="video-controls">
-                <button class="speed-btn" onclick="setSpeed(0.5)">0.5x</button>
-                <button class="speed-btn" onclick="setSpeed(0.75)">0.75x</button>
-                <button class="speed-btn active" onclick="setSpeed(1)">1x</button>
-                <button class="speed-btn" onclick="setSpeed(1.25)">1.25x</button>
-                <button class="speed-btn" onclick="setSpeed(1.5)">1.5x</button>
-                <button class="speed-btn" onclick="setSpeed(2)">2x</button>
+
+            <div class="modal-controls">
+                <div class="modal-info">
+                    <div class="modal-title" id="videoTitle">Video Title Goes Here</div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-row">
+                        <!-- Speed Control -->
+                        <div class="speed-control">
+                            <div class="control-label">Speed</div>
+                            <button class="control-btn" onclick="adjustSpeed(-0.25)">-</button>
+                            <span id="speedDisplay" style="font-size: 0.9rem; font-weight: 600; width: 40px; text-align: center;">1x</span>
+                            <button class="control-btn" onclick="adjustSpeed(0.25)">+</button>
+                        </div>
+
+                        <!-- Volume Control (Custom) -->
+                         <div class="volume-control">
+                            <div class="control-label">Vol</div>
+                            <button class="control-btn" onclick="adjustVolume(-0.1)">-</button>
+                            <button class="control-btn" onclick="adjustVolume(0.1)">+</button>
+                        </div>
+                    </div>
+
+                    <button class="close-btn" onclick="closeVideo()">
+                        <span>Close Player</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -750,14 +756,18 @@ def generate_html(categories, password, batch_name, credit_name):
         const encryptedData = {encrypted_json};
 
         function checkPassword() {{
-            const input = document.getElementById('passwordInput').value;
-            if (input === PASSWORD) {{
-                document.getElementById('passwordScreen').style.display = 'none';
-                document.getElementById('mainContent').style.display = 'block';
-                loadContent();
+            const input = document.getElementById('passwordInput');
+            if (input.value === PASSWORD) {{
+                document.getElementById('passwordScreen').style.opacity = '0';
+                setTimeout(() => {{
+                    document.getElementById('passwordScreen').style.display = 'none';
+                    document.getElementById('mainContent').style.display = 'block';
+                    loadContent();
+                }}, 300);
             }} else {{
-                alert('❌ Wrong Password!');
-                document.getElementById('passwordInput').value = '';
+                input.style.borderColor = 'var(--danger)';
+                input.classList.add('shake');
+                setTimeout(() => input.classList.remove('shake'), 500);
             }}
         }}
 
@@ -780,6 +790,7 @@ def generate_html(categories, password, batch_name, credit_name):
             let totalItems = 0;
 
             const categoriesDiv = document.getElementById('categories');
+            categoriesDiv.innerHTML = '';
             
             for (const [category, items] of Object.entries(encryptedData)) {{
                 totalItems += items.length;
@@ -796,36 +807,43 @@ def generate_html(categories, password, batch_name, credit_name):
 
                 items.forEach(item => {{
                     const itemDiv = document.createElement('div');
-                    itemDiv.className = 'item';
                     
-                    let badge = '';
-                    let buttonText = '📄 Open';
+                    let typeClass = 'type-other';
+                    let icon = '📁';
+                    let metaText = 'File • Open';
                     
                     if (item.type === 'VIDEO') {{
-                        badge = '<span class="item-badge badge-video">VIDEO</span>';
-                        buttonText = '▶️ Play';
+                        typeClass = 'type-video';
+                        icon = '▶';
+                        metaText = 'Video • Play Now';
                     }} else if (item.type === 'PDF') {{
-                        badge = '<span class="item-badge badge-pdf">PDF</span>';
+                        typeClass = 'type-pdf';
+                        icon = '📄';
+                        metaText = 'PDF • View';
                     }} else if (item.type === 'IMAGE') {{
-                        badge = '<span class="item-badge badge-image">IMAGE</span>';
-                    }} else {{
-                        badge = '<span class="item-badge badge-other">FILE</span>';
+                        typeClass = 'type-image';
+                        icon = '🖼️';
+                        metaText = 'Image • View';
                     }}
                     
+                    itemDiv.className = `item ${{typeClass}}`;
                     itemDiv.innerHTML = `
-                        <div class="item-title">${{item.title}}</div>
-                        ${{badge}}
-                        <button class="item-btn" onclick='openLink("${{item.link}}", "${{item.title}}", "${{item.type}}")'>
-                            ${{buttonText}}
-                        </button>
+                        <div class="item-icon">${{icon}}</div>
+                        <div class="item-content">
+                            <div class="item-title">${{item.title}}</div>
+                            <div class="item-meta">${{metaText}}</div>
+                        </div>
+                        <div class="item-action">→</div>
                     `;
+
+                    itemDiv.onclick = () => openItem(item.link, item.title, item.type);
                     categoryDiv.appendChild(itemDiv);
                 }});
 
                 categoriesDiv.appendChild(categoryDiv);
             }}
 
-            document.getElementById('stats').innerHTML = `
+             document.querySelector('.stats').innerHTML = `
                 <div class="stat-card">
                     <div class="stat-number">${{totalItems}}</div>
                     <div class="stat-label">All Items</div>
@@ -836,16 +854,12 @@ def generate_html(categories, password, batch_name, credit_name):
                 </div>
                 <div class="stat-card">
                     <div class="stat-number">${{totalPDFs}}</div>
-                    <div class="stat-label">PDFs</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${{totalImages}}</div>
-                    <div class="stat-label">Images</div>
+                    <div class="stat-label">Documents</div>
                 </div>
             `;
         }}
 
-        function openLink(encrypted, title, type) {{
+        function openItem(encrypted, title, type) {{
             const link = decryptLink(encrypted);
             if (!link) {{
                 alert('❌ Invalid link!');
@@ -853,38 +867,72 @@ def generate_html(categories, password, batch_name, credit_name):
             }}
 
             if (type === 'VIDEO') {{
-                document.getElementById('videoTitle').textContent = title;
-                document.getElementById('videoPlayer').src = link;
-                document.getElementById('videoModal').style.display = 'block';
+                openVideo(title, link);
             }} else {{
                 window.open(link, '_blank');
             }}
         }}
 
-        function closeVideo() {{
-            document.getElementById('videoModal').style.display = 'none';
-            document.getElementById('videoPlayer').pause();
-            document.getElementById('videoPlayer').src = '';
-        }}
-
-        function setSpeed(speed) {{
-            document.getElementById('videoPlayer').playbackRate = speed;
-            document.querySelectorAll('.speed-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-        }}
-
-        function changeTheme(theme) {{
-            document.body.className = theme === 'dark' ? '' : `theme-${{theme}}`;
+        // Theme Handling
+        function setTheme(theme) {{
+            document.body.className = `theme-${{theme}}`;
+            document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
+            if (event) event.target.classList.add('active');
             localStorage.setItem('theme', theme);
         }}
 
-        // Load saved theme
+        // Restore theme
         window.onload = function() {{
             const savedTheme = localStorage.getItem('theme');
-            if (savedTheme && savedTheme !== 'dark') {{
-                document.body.className = `theme-${{savedTheme}}`;
+            if (savedTheme) {{
+                setTheme(savedTheme);
+                // Highlight correct button
+                document.querySelectorAll('.theme-btn').forEach(btn => {{
+                    if(btn.textContent.toLowerCase() === savedTheme ||
+                       (savedTheme === 'default' && btn.textContent === 'Dark')) {{
+                        btn.classList.add('active');
+                    }} else {{
+                        btn.classList.remove('active');
+                    }}
+                }});
             }}
         }};
+
+        // Video Player Logic
+        const videoPlayer = document.getElementById('videoPlayer');
+        const videoModal = document.getElementById('videoModal');
+
+        function openVideo(title, url) {{
+            document.getElementById('videoTitle').textContent = title;
+            videoPlayer.src = url;
+            videoModal.classList.add('active');
+            videoPlayer.play();
+        }}
+
+        function closeVideo() {{
+            videoModal.classList.remove('active');
+            videoPlayer.pause();
+            setTimeout(() => {{
+                videoPlayer.src = '';
+            }}, 300);
+        }}
+
+        function adjustSpeed(change) {{
+            let newSpeed = videoPlayer.playbackRate + change;
+            if (newSpeed < 0.25) newSpeed = 0.25;
+            if (newSpeed > 3) newSpeed = 3;
+            videoPlayer.playbackRate = newSpeed;
+            document.getElementById('speedDisplay').textContent = newSpeed + 'x';
+        }}
+
+        function adjustVolume(change) {{
+            let newVol = videoPlayer.volume + change;
+            if (newVol < 0) newVol = 0;
+            if (newVol > 1) newVol = 1;
+            videoPlayer.volume = newVol;
+        }}
+
+        document.addEventListener('contextmenu', event => event.preventDefault());
     </script>
 </body>
 </html>'''
