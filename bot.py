@@ -117,66 +117,64 @@ def generate_html(categories, password, batch_name, credit_name):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>{batch_name}</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {{
-            --primary: #2563eb;
-            --primary-dark: #1d4ed8;
-            --bg-dark: #0f172a;
-            --bg-card: #1e293b;
+            --primary: #4f46e5;
+            --primary-glow: rgba(79, 70, 229, 0.4);
+            --bg-body: #0f172a;
+            --surface: #1e293b;
+            --surface-glass: rgba(30, 41, 59, 0.7);
             --text-main: #f8fafc;
-            --text-sub: #94a3b8;
-            --accent: #f59e0b;
-            --danger: #ef4444;
-            --success: #22c55e;
-            --border: #334155;
-            --radius: 12px;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --text-muted: #94a3b8;
+            --border: rgba(148, 163, 184, 0.1);
+            --radius-lg: 20px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --gradient-1: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
         }}
 
-        /* Theme Variables */
         body.theme-light {{
-            --bg-dark: #f0f9ff;
-            --bg-card: #ffffff;
-            --text-main: #1e293b;
-            --text-sub: #64748b;
-            --border: #e2e8f0;
-        }}
-
-        body.theme-oled {{
-            --bg-dark: #000000;
-            --bg-card: #121212;
-            --border: #2c2c2c;
+            --bg-body: #f8fafc;
+            --surface: #ffffff;
+            --surface-glass: rgba(255, 255, 255, 0.8);
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: rgba(148, 163, 184, 0.2);
         }}
 
         body.theme-midnight {{
-            --bg-dark: #0b1021;
-            --bg-card: #151e32;
+            --bg-body: #020617;
+            --surface: #0f172a;
+            --surface-glass: rgba(15, 23, 42, 0.8);
             --primary: #7c3aed;
-            --border: #2d3748;
+            --gradient-1: linear-gradient(135deg, #7c3aed 0%, #c026d3 100%);
         }}
 
         * {{ margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }}
 
         body {{
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background-color: var(--bg-dark);
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-body);
             color: var(--text-main);
             min-height: 100vh;
             overflow-x: hidden;
-            transition: background-color 0.3s, color 0.3s;
+            transition: all 0.3s ease;
         }}
 
-        /* Scrollbar */
+        /* Enhanced Scrollbar */
         ::-webkit-scrollbar {{ width: 6px; }}
         ::-webkit-scrollbar-track {{ background: transparent; }}
-        ::-webkit-scrollbar-thumb {{ background: var(--border); border-radius: 10px; }}
+        ::-webkit-scrollbar-thumb {{ background: var(--text-muted); opacity: 0.3; border-radius: 10px; }}
 
-        /* --- Password Screen --- */
+        /* --- Auth Screen --- */
         #auth-screen {{
             position: fixed;
             inset: 0;
-            background: var(--bg-dark);
+            background: var(--bg-body);
             z-index: 9999;
             display: flex;
             align-items: center;
@@ -185,403 +183,395 @@ def generate_html(categories, password, batch_name, credit_name):
         }}
 
         .auth-card {{
-            background: var(--bg-card);
-            padding: 2.5rem;
-            border-radius: 24px;
+            background: var(--surface-glass);
+            backdrop-filter: blur(20px);
+            padding: 3rem;
+            border-radius: 30px;
             width: 100%;
-            max-width: 400px;
+            max-width: 380px;
             text-align: center;
             border: 1px solid var(--border);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
+            animation: floatIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
         }}
 
-        @keyframes slideUp {{
-            from {{ transform: translateY(20px); opacity: 0; }}
-            to {{ transform: translateY(0); opacity: 1; }}
+        @keyframes floatIn {{
+            from {{ opacity: 0; transform: translateY(40px) scale(0.95); }}
+            to {{ opacity: 1; transform: translateY(0) scale(1); }}
         }}
 
-        .auth-icon {{
-            font-size: 3rem;
-            margin-bottom: 1.5rem;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .auth-icon-wrapper {{
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: var(--gradient-1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            box-shadow: 0 10px 20px var(--primary-glow);
         }}
 
         .auth-input {{
             width: 100%;
-            padding: 16px;
-            background: var(--bg-dark);
-            border: 2px solid var(--border);
-            border-radius: var(--radius);
+            padding: 18px;
+            background: rgba(0,0,0,0.2);
+            border: 2px solid transparent;
+            border-radius: var(--radius-md);
             color: var(--text-main);
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             margin: 1.5rem 0;
             text-align: center;
-            letter-spacing: 2px;
+            letter-spacing: 4px;
+            font-weight: 700;
             transition: 0.3s;
         }}
 
+        body.theme-light .auth-input {{ background: rgba(0,0,0,0.05); }}
+
         .auth-input:focus {{
+            background: transparent;
             border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-glow);
             outline: none;
-            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
         }}
 
-        .btn {{
+        .btn-grad {{
             width: 100%;
-            padding: 16px;
+            padding: 18px;
             border: none;
-            border-radius: var(--radius);
-            font-weight: 700;
+            border-radius: var(--radius-md);
+            background: var(--gradient-1);
+            color: white;
+            font-weight: 600;
             font-size: 1rem;
             cursor: pointer;
-            transition: 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+            box-shadow: 0 4px 15px var(--primary-glow);
+            transition: transform 0.2s, box-shadow 0.2s;
         }}
 
-        .btn-primary {{
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
-        }}
+        .btn-grad:active {{ transform: scale(0.97); }}
 
-        .btn-primary:active {{ transform: scale(0.98); }}
-
-        /* --- Main App UI --- */
-        #app-view {{ display: none; padding-bottom: 80px; }}
-
-        /* Header */
+        /* --- Header --- */
         .app-header {{
             position: sticky;
             top: 0;
-            z-index: 100;
-            background: rgba(15, 23, 42, 0.85);
+            z-index: 50;
+            background: var(--surface-glass);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border);
-            padding: 16px 20px;
+            padding: 16px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }}
 
-        .header-title h1 {{
-            font-size: 1.25rem;
+        .brand {{
             font-weight: 800;
-            background: linear-gradient(to right, var(--text-main), var(--text-sub));
+            font-size: 1.4rem;
+            background: var(--gradient-1);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
         }}
 
-        .header-credit {{ font-size: 0.75rem; color: var(--text-sub); }}
-
-        .header-actions {{ display: flex; gap: 10px; }}
-
-        .icon-btn {{
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            color: var(--text-main);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: 0.2s;
-        }}
-
-        .icon-btn:hover {{ background: var(--border); }}
-
-        /* Theme Selector */
-        #theme-modal {{
-            position: fixed;
-            bottom: -100%;
-            left: 0;
-            width: 100%;
-            background: var(--bg-card);
-            border-radius: 24px 24px 0 0;
-            padding: 24px;
-            z-index: 2000;
-            transition: bottom 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            border-top: 1px solid var(--border);
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
-        }}
-
-        #theme-modal.active {{ bottom: 0; }}
-
-        .theme-grid {{
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-top: 20px;
-        }}
-
-        .theme-option {{
-            padding: 15px;
+        .theme-toggle {{
+            width: 44px;
+            height: 44px;
             border-radius: 12px;
-            border: 2px solid var(--border);
-            text-align: center;
-            cursor: pointer;
-            background: var(--bg-dark);
+            background: rgba(125,125,125,0.1);
+            border: none;
             color: var(--text-main);
-            font-size: 0.9rem;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: 0.3s;
         }}
 
-        .theme-option.active {{ border-color: var(--primary); color: var(--primary); }}
+        .theme-toggle:hover {{ background: var(--primary); color: white; }}
 
-        /* Stats & Content */
-        .container {{ max-width: 800px; margin: 0 auto; padding: 20px; }}
+        /* --- List View --- */
+        .container {{ max-width: 900px; margin: 0 auto; padding: 24px; }}
 
-        .stats-row {{
+        .stat-bar {{
             display: flex;
             gap: 12px;
+            margin-bottom: 30px;
             overflow-x: auto;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
+            padding-bottom: 5px;
         }}
 
-        .stat-chip {{
-            background: var(--bg-card);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            color: var(--text-sub);
+        .stat-pill {{
+            padding: 10px 20px;
+            background: var(--surface);
+            border-radius: 100px;
             border: 1px solid var(--border);
-            white-space: nowrap;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            white-space: nowrap;
         }}
 
-        .stat-chip i {{ color: var(--primary); }}
+        .stat-pill.active {{
+            background: var(--gradient-1);
+            color: white;
+            border-color: transparent;
+        }}
 
-        .category-section {{ margin-bottom: 30px; }}
-
-        .cat-title {{
-            font-size: 1.1rem;
+        .section-title {{
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
             font-weight: 700;
+            margin: 30px 0 15px;
+            padding-left: 10px;
+            border-left: 3px solid var(--primary);
+        }}
+
+        .content-card {{
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: 20px;
             margin-bottom: 16px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            color: var(--text-main);
-        }}
-
-        .cat-title::before {{
-            content: '';
-            width: 4px;
-            height: 20px;
-            background: var(--accent);
-            border-radius: 2px;
-        }}
-
-        .item-card {{
-            background: var(--bg-card);
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
+            gap: 20px;
             border: 1px solid var(--border);
-            transition: transform 0.2s, border-color 0.2s;
-            position: relative;
-            overflow: hidden;
-        }}
-
-        .item-card:active {{ transform: scale(0.98); }}
-
-        .item-icon {{
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            flex-shrink: 0;
-        }}
-
-        .icon-video {{ background: rgba(239, 68, 68, 0.1); color: #ef4444; }}
-        .icon-pdf {{ background: rgba(245, 158, 11, 0.1); color: #f59e0b; }}
-        .icon-img {{ background: rgba(34, 197, 94, 0.1); color: #22c55e; }}
-
-        .item-info {{ flex: 1; min-width: 0; }}
-
-        .item-title {{
-            font-weight: 600;
-            font-size: 0.95rem;
-            margin-bottom: 4px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }}
-
-        .item-meta {{ font-size: 0.75rem; color: var(--text-sub); display: flex; align-items: center; gap: 6px; }}
-
-        .action-btn {{
-            background: var(--bg-dark);
-            color: var(--primary);
-            border: 1px solid var(--border);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
+            transition: all 0.2s;
             cursor: pointer;
         }}
 
-        /* --- Player View --- */
+        .content-card:hover {{
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(0,0,0,0.1);
+            border-color: var(--primary);
+        }}
+
+        .card-icon {{
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            background: rgba(125,125,125,0.05);
+        }}
+
+        .type-video .card-icon {{ color: #f43f5e; background: rgba(244, 63, 94, 0.1); }}
+        .type-pdf .card-icon {{ color: #f59e0b; background: rgba(245, 158, 11, 0.1); }}
+        .type-image .card-icon {{ color: #10b981; background: rgba(16, 185, 129, 0.1); }}
+
+        .card-info {{ flex: 1; min-width: 0; }}
+
+        .card-title {{
+            font-weight: 600;
+            font-size: 1.05rem;
+            margin-bottom: 6px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }}
+
+        .card-meta {{
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }}
+
+        /* --- Player (Improved) --- */
         #player-view {{
             position: fixed;
             inset: 0;
-            background: #000;
-            z-index: 5000;
+            background: black;
+            z-index: 10000;
             display: none;
             flex-direction: column;
         }}
 
-        .video-wrapper {{
+        .video-container {{
             width: 100%;
-            background: #000;
-            position: relative;
+            background: black;
             flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            max-height: 45vh;
         }}
 
         video {{
             width: 100%;
-            max-height: 50vh;
-            display: block;
+            max-height: 100%;
+            object-fit: contain;
         }}
 
-        .player-body {{
+        .player-controls {{
             flex: 1;
-            background: var(--bg-dark);
-            padding: 24px;
-            overflow-y: auto;
+            background: var(--bg-body);
+            border-top: 1px solid var(--border);
             border-radius: 24px 24px 0 0;
-            margin-top: -24px;
+            padding: 30px 24px;
+            overflow-y: auto;
             position: relative;
-            z-index: 10;
+            display: flex;
+            flex-direction: column;
         }}
 
-        .player-header {{ margin-bottom: 24px; }}
+        .track-info {{ margin-bottom: 30px; }}
 
-        .player-title {{
-            font-size: 1.2rem;
+        .track-title {{
+            font-size: 1.3rem;
             font-weight: 700;
             margin-bottom: 8px;
-            line-height: 1.4;
+            background: linear-gradient(to right, var(--text-main), var(--text-muted));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }}
 
-        .controls-grid {{
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 12px;
-            margin-bottom: 30px;
-        }}
-
-        .control-group {{
-            background: var(--bg-card);
-            padding: 16px;
-            border-radius: 16px;
+        .control-panel {{
+            background: var(--surface);
+            border-radius: 20px;
+            padding: 20px;
             border: 1px solid var(--border);
+            margin-bottom: 20px;
         }}
 
-        .control-label {{
+        .panel-label {{
             font-size: 0.75rem;
-            color: var(--text-sub);
-            margin-bottom: 10px;
             text-transform: uppercase;
             letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
             font-weight: 700;
         }}
 
-        /* Custom Range Input */
-        input[type=range] {{
+        /* Custom Speed Chips */
+        .speed-grid {{
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 6px;
+        }}
+
+        .speed-btn {{
+            padding: 8px 0;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid transparent;
+            border-radius: 8px;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }}
+
+        .speed-btn.active {{
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 10px var(--primary-glow);
+        }}
+
+        /* Volume Slider */
+        .vol-slider {{
             width: 100%;
-            height: 6px;
-            background: var(--border);
-            border-radius: 3px;
+            height: 8px;
+            background: rgba(125,125,125,0.2);
+            border-radius: 10px;
             outline: none;
             -webkit-appearance: none;
         }}
 
-        input[type=range]::-webkit-slider-thumb {{
+        .vol-slider::-webkit-slider-thumb {{
             -webkit-appearance: none;
-            width: 18px;
-            height: 18px;
+            width: 20px;
+            height: 20px;
             background: var(--primary);
             border-radius: 50%;
             cursor: pointer;
-            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+            box-shadow: 0 0 0 4px var(--primary-glow);
         }}
 
-        /* Speed Buttons */
-        .speed-options {{
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
+        .action-grid {{
+            margin-top: auto;
+            display: grid;
+            gap: 12px;
         }}
 
-        .speed-chip {{
-            padding: 6px 12px;
-            background: var(--bg-dark);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            flex: 1;
-            text-align: center;
-        }}
-
-        .speed-chip.active {{
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }}
-
-        .back-btn-large {{
+        .close-btn {{
             width: 100%;
             padding: 18px;
-            background: var(--bg-card);
-            border: 2px solid var(--border);
-            color: var(--text-main);
             border-radius: 16px;
-            font-weight: 700;
-            font-size: 1rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            font-weight: 600;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
             cursor: pointer;
-            margin-top: auto;
+            transition: 0.2s;
         }}
 
-        .back-btn-large:hover {{
-            border-color: var(--danger);
-            color: var(--danger);
+        .close-btn:hover {{
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border-color: #ef4444;
         }}
 
-        /* Overlay */
-        #overlay {{
+        /* Theme Modal */
+        .modal-overlay {{
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.6);
-            z-index: 1500;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            z-index: 9000;
             display: none;
             opacity: 0;
-            transition: opacity 0.3s;
+            transition: 0.3s;
         }}
-        #overlay.active {{ display: block; opacity: 1; }}
+        .modal-overlay.active {{ opacity: 1; display: block; }}
 
-        /* Animations */
-        @keyframes fadeIn {{ from {{ opacity: 0; }} to {{ opacity: 1; }} }}
-        .fade-in {{ animation: fadeIn 0.4s ease-out; }}
+        .bottom-sheet {{
+            position: fixed;
+            bottom: -100%;
+            left: 0;
+            width: 100%;
+            background: var(--surface);
+            border-radius: 30px 30px 0 0;
+            padding: 30px;
+            z-index: 9500;
+            transition: bottom 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            border-top: 1px solid var(--border);
+        }}
+        .bottom-sheet.active {{ bottom: 0; }}
+
+        .theme-row {{
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 20px;
+        }}
+
+        .theme-card {{
+            padding: 20px;
+            border-radius: 16px;
+            background: var(--bg-body);
+            border: 2px solid var(--border);
+            text-align: center;
+            cursor: pointer;
+        }}
+
+        .theme-card.active {{ border-color: var(--primary); background: rgba(79, 70, 229, 0.05); }}
+
     </style>
 </head>
 <body>
@@ -589,93 +579,124 @@ def generate_html(categories, password, batch_name, credit_name):
     <!-- Auth Screen -->
     <div id="auth-screen">
         <div class="auth-card">
-            <div class="auth-icon"><i class="fas fa-lock"></i></div>
-            <h2>Protected Content</h2>
-            <p style="color: var(--text-sub); margin-top: 8px;">Enter password to access {batch_name}</p>
-            <input type="password" id="password-input" class="auth-input" placeholder="PASSWORD">
-            <button class="btn btn-primary" onclick="checkPassword()">
-                <i class="fas fa-unlock-alt"></i> Access Content
+            <div class="auth-icon-wrapper">
+                <i class="fas fa-lock"></i>
+            </div>
+            <h2 style="margin-bottom: 10px;">Protected Content</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">
+                Enter access code for<br><strong>{batch_name}</strong>
+            </p>
+
+            <input type="password" id="password-input" class="auth-input" placeholder="••••" maxlength="8">
+
+            <button class="btn-grad" onclick="checkPassword()">
+                UNLOCK ACCESS
             </button>
         </div>
     </div>
 
-    <!-- Main App -->
-    <div id="app-view">
-        <div class="app-header">
-            <div class="header-title">
-                <h1>{batch_name}</h1>
-                <div class="header-credit">by {credit_name}</div>
+    <!-- Main Application -->
+    <div id="app-view" style="display: none;">
+        <header class="app-header">
+            <div class="brand">
+                <i class="fas fa-cube" style="color: var(--primary); margin-right: 8px;"></i>Hub
             </div>
-            <div class="header-actions">
-                <button class="icon-btn" onclick="toggleThemeModal()"><i class="fas fa-palette"></i></button>
-            </div>
-        </div>
+            <button class="theme-toggle" onclick="toggleThemeModal()">
+                <i class="fas fa-palette"></i>
+            </button>
+        </header>
 
         <div class="container">
-            <!-- Stats -->
-            <div class="stats-row" id="stats-bar">
-                <!-- Injected via JS -->
+            <!-- Header Info -->
+            <div style="margin-bottom: 30px;">
+                <h1 style="font-size: 1.8rem; font-weight: 700; margin-bottom: 8px;">{batch_name}</h1>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">
+                    <i class="fas fa-user-circle"></i> Created by {credit_name}
+                </p>
             </div>
 
-            <!-- Content -->
+            <!-- Stats -->
+            <div class="stat-bar" id="stats-bar"></div>
+
+            <!-- Content List -->
             <div id="content-list"></div>
+
+            <div style="text-align: center; margin-top: 50px; opacity: 0.3; font-size: 0.8rem;">
+                <i class="fas fa-shield-alt"></i> Secure Content Viewer
+            </div>
         </div>
     </div>
 
-    <!-- Player View (Full Screen) -->
+    <!-- Enhanced Player View -->
     <div id="player-view">
-        <div class="video-wrapper">
+        <div class="video-container">
             <video id="main-player" controls controlsList="nodownload" oncontextmenu="return false;">
-                Your browser does not support the video tag.
+                Your browser does not support video.
             </video>
         </div>
 
-        <div class="player-body">
-            <div class="player-header">
-                <div class="player-title" id="player-title">Video Title</div>
-                <div style="color: var(--text-sub); font-size: 0.9rem;">
-                    <i class="fas fa-shield-alt"></i> Protected Content • No Download
+        <div class="player-controls">
+            <div class="track-info">
+                <div class="track-title" id="player-title">Video Title</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+                    <span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 0.7rem;">SECURE</span>
+                    <span>No Downloads Allowed</span>
                 </div>
             </div>
 
-            <div class="controls-grid">
-                <!-- Speed Control -->
-                <div class="control-group" style="grid-column: 1 / -1;">
-                    <div class="control-label"><i class="fas fa-tachometer-alt"></i> Playback Speed</div>
-                    <div class="speed-options">
-                        <button class="speed-chip" onclick="setSpeed(0.5)">0.5x</button>
-                        <button class="speed-chip" onclick="setSpeed(0.75)">0.75x</button>
-                        <button class="speed-chip active" onclick="setSpeed(1.0)">1.0x</button>
-                        <button class="speed-chip" onclick="setSpeed(1.25)">1.25x</button>
-                        <button class="speed-chip" onclick="setSpeed(1.5)">1.5x</button>
-                        <button class="speed-chip" onclick="setSpeed(2.0)">2.0x</button>
-                    </div>
+            <!-- Speed -->
+            <div class="control-panel">
+                <div class="panel-label">
+                    <i class="fas fa-tachometer-alt"></i> Playback Speed
                 </div>
-
-                <!-- Volume Control -->
-                <div class="control-group" style="grid-column: 1 / -1;">
-                    <div class="control-label">
-                        <i class="fas fa-volume-up"></i> Volume <span id="vol-val">100%</span>
-                    </div>
-                    <input type="range" min="0" max="1" step="0.1" value="1" oninput="setVolume(this.value)">
+                <div class="speed-grid">
+                    <button class="speed-btn" onclick="setSpeed(0.5)">0.5x</button>
+                    <button class="speed-btn" onclick="setSpeed(0.75)">0.75x</button>
+                    <button class="speed-btn active" onclick="setSpeed(1.0)">1x</button>
+                    <button class="speed-btn" onclick="setSpeed(1.25)">1.25x</button>
+                    <button class="speed-btn" onclick="setSpeed(1.5)">1.5x</button>
+                    <button class="speed-btn" onclick="setSpeed(2.0)">2x</button>
                 </div>
             </div>
 
-            <button class="back-btn-large" onclick="closePlayer()">
-                <i class="fas fa-arrow-left"></i> Return to List
-            </button>
+            <!-- Volume -->
+            <div class="control-panel">
+                <div class="panel-label" style="display: flex; justify-content: space-between;">
+                    <span><i class="fas fa-volume-up"></i> Volume</span>
+                    <span id="vol-display" style="color: var(--primary);">100%</span>
+                </div>
+                <input type="range" class="vol-slider" min="0" max="1" step="0.1" value="1" oninput="setVolume(this.value)">
+            </div>
+
+            <div class="action-grid">
+                <button class="close-btn" onclick="closePlayer()">
+                    <i class="fas fa-chevron-down"></i> Minimize Player
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- Theme Modal -->
-    <div id="overlay" onclick="toggleThemeModal()"></div>
-    <div id="theme-modal">
-        <h3><i class="fas fa-paint-brush"></i> Choose Theme</h3>
-        <div class="theme-grid">
-            <div class="theme-option" onclick="setTheme('dark')">Dark</div>
-            <div class="theme-option" onclick="setTheme('light')">Light</div>
-            <div class="theme-option" onclick="setTheme('oled')">OLED</div>
-            <div class="theme-option" onclick="setTheme('midnight')">Midnight</div>
+    <!-- Theme Sheet -->
+    <div class="modal-overlay" id="modal-overlay" onclick="toggleThemeModal()"></div>
+    <div class="bottom-sheet" id="theme-sheet">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h3 style="font-size: 1.2rem;">Appearance</h3>
+            <button onclick="toggleThemeModal()" style="background: none; border: none; font-size: 1.5rem; color: var(--text-muted);"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div class="theme-row">
+            <div class="theme-card active" onclick="setTheme('dark')">
+                <i class="fas fa-moon" style="font-size: 1.5rem; margin-bottom: 10px;"></i>
+                <div>Dark Dimmed</div>
+            </div>
+            <div class="theme-card" onclick="setTheme('midnight')">
+                <i class="fas fa-meteor" style="font-size: 1.5rem; margin-bottom: 10px; color: #a855f7;"></i>
+                <div>Midnight</div>
+            </div>
+            <div class="theme-card" onclick="setTheme('light')">
+                <i class="fas fa-sun" style="font-size: 1.5rem; margin-bottom: 10px; color: #f59e0b;"></i>
+                <div>Light Mode</div>
+            </div>
         </div>
     </div>
 
@@ -732,57 +753,47 @@ def generate_html(categories, password, batch_name, credit_name):
             let stats = {{ video: 0, pdf: 0, image: 0, total: 0 }};
 
             for (const [category, items] of Object.entries(CONFIG.data)) {{
-                const section = document.createElement('div');
-                section.className = 'category-section fade-in';
+                // Section Title
+                const title = document.createElement('div');
+                title.className = 'section-title';
+                title.innerText = category;
+                container.appendChild(title);
 
-                section.innerHTML = `<div class="cat-title">${{category}} <span style="font-size:0.8em; opacity:0.6; font-weight:400">(${{items.length}})</span></div>`;
-
+                // Items
                 items.forEach(item => {{
                     stats.total++;
                     if(item.type === 'VIDEO') stats.video++;
                     if(item.type === 'PDF') stats.pdf++;
 
                     const el = document.createElement('div');
-                    el.className = 'item-card';
+                    el.className = 'content-card type-' + item.type.toLowerCase();
                     el.onclick = () => openItem(item);
                     
                     let iconClass = 'fas fa-file';
-                    let iconType = 'icon-other';
-                    let actionText = 'OPEN';
                     
-                    if (item.type === 'VIDEO') {{
-                        iconClass = 'fas fa-play';
-                        iconType = 'icon-video';
-                        actionText = 'PLAY';
-                    }} else if (item.type === 'PDF') {{
-                        iconClass = 'fas fa-file-pdf';
-                        iconType = 'icon-pdf';
-                        actionText = 'READ';
-                    }} else if (item.type === 'IMAGE') {{
-                        iconClass = 'fas fa-image';
-                        iconType = 'icon-img';
-                        actionText = 'VIEW';
-                    }}
+                    if (item.type === 'VIDEO') iconClass = 'fas fa-play';
+                    else if (item.type === 'PDF') iconClass = 'fas fa-file-pdf';
+                    else if (item.type === 'IMAGE') iconClass = 'fas fa-image';
 
                     el.innerHTML = `
-                        <div class="item-icon ${{iconType}}"><i class="${{iconClass}}"></i></div>
-                        <div class="item-info">
-                            <div class="item-title">${{item.title}}</div>
-                            <div class="item-meta">${{item.type}}</div>
+                        <div class="card-icon"><i class="${{iconClass}}"></i></div>
+                        <div class="card-info">
+                            <div class="card-title">${{item.title}}</div>
+                            <div class="card-meta">
+                                <span>${{item.type}}</span>
+                                <i class="fas fa-chevron-right" style="margin-left: auto; opacity: 0.5;"></i>
+                            </div>
                         </div>
-                        <div class="action-btn">${{actionText}}</div>
                     `;
-                    section.appendChild(el);
+                    container.appendChild(el);
                 }});
-
-                container.appendChild(section);
             }}
 
             // Render Stats
             statsBar.innerHTML = `
-                <div class="stat-chip"><i class="fas fa-layer-group"></i> All ${{stats.total}}</div>
-                <div class="stat-chip"><i class="fas fa-video"></i> Video ${{stats.video}}</div>
-                <div class="stat-chip"><i class="fas fa-file-pdf"></i> PDF ${{stats.pdf}}</div>
+                <div class="stat-pill active"><i class="fas fa-layer-group"></i> All ${{stats.total}}</div>
+                <div class="stat-pill"><i class="fas fa-video"></i> ${{stats.video}} Video</div>
+                <div class="stat-pill"><i class="fas fa-file-pdf"></i> ${{stats.pdf}} PDF</div>
             `;
         }}
 
@@ -817,27 +828,27 @@ def generate_html(categories, password, batch_name, credit_name):
 
         function setSpeed(rate) {{
             player.playbackRate = rate;
-            document.querySelectorAll('.speed-chip').forEach(c => {{
+            document.querySelectorAll('.speed-btn').forEach(c => {{
                 c.classList.toggle('active', parseFloat(c.innerText) === rate);
             }});
         }}
 
         function setVolume(val) {{
             player.volume = val;
-            document.getElementById('vol-val').textContent = Math.round(val * 100) + '%';
+            document.getElementById('vol-display').textContent = Math.round(val * 100) + '%';
         }}
 
         // --- Theme Logic ---
         function toggleThemeModal() {{
-            const modal = document.getElementById('theme-modal');
-            const overlay = document.getElementById('overlay');
-            const isActive = modal.classList.contains('active');
+            const sheet = document.getElementById('theme-sheet');
+            const overlay = document.getElementById('modal-overlay');
+            const isActive = sheet.classList.contains('active');
 
             if (isActive) {{
-                modal.classList.remove('active');
+                sheet.classList.remove('active');
                 overlay.classList.remove('active');
             }} else {{
-                modal.classList.add('active');
+                sheet.classList.add('active');
                 overlay.classList.add('active');
             }}
         }}
@@ -846,12 +857,19 @@ def generate_html(categories, password, batch_name, credit_name):
             document.body.className = `theme-${{themeName}}`;
             localStorage.setItem('theme', themeName);
 
-            // Highlight active
-            document.querySelectorAll('.theme-option').forEach(opt => {{
-                opt.classList.toggle('active', opt.textContent.toLowerCase() === themeName);
+            // Update Active State
+            document.querySelectorAll('.theme-card').forEach(card => {{
+                const isMatch = card.textContent.toLowerCase().includes(themeName) ||
+                               (themeName === 'midnight' && card.innerText.includes('Midnight'));
+
+                // Simple logic for demo, better to rely on data attribute
+                card.classList.remove('active');
+                if(card.getAttribute('onclick').includes(themeName)) {{
+                    card.classList.add('active');
+                }}
             }});
 
-            if (document.getElementById('theme-modal').classList.contains('active')) {{
+            if (document.getElementById('theme-sheet').classList.contains('active')) {{
                 toggleThemeModal();
             }}
         }}
