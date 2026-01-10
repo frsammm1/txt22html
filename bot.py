@@ -57,8 +57,8 @@ def parse_txt_content(content):
         if not ('http://' in line or 'https://' in line):
             continue
         
-        # Method 1: [CATEGORY] Title: URL
-        category_match = re.match(r'^\[([^\]]+)\]\s*(.+?):\s*(https?://\S+)', line)
+        # Method 1: [CATEGORY] Title: URL (Allows spaces in URL)
+        category_match = re.match(r'^\[([^\]]+)\]\s*(.+?):\s*(https?://.+)', line)
         if category_match:
             parsed_lines += 1
             category = category_match.group(1).strip()
@@ -69,8 +69,16 @@ def parse_txt_content(content):
             categories[category].append({'title': title, 'link': link, 'type': detect_file_type(link)})
             continue
         
-        # Method 2: Title: URL (Handle multiple URLs)
-        urls = re.findall(r'https?://\S+', line)
+        # Method 2: Title: URL (Handle spaces if single URL ending in extension)
+        # Check for single URL with spaces (e.g. PDF/Video) at end of line
+        space_url_match = re.search(r'(?:.+?:\s*)?(https?://.*\.(?:pdf|mp4|mkv|mov|avi|flv|webm|m3u8|ts|3gp|jpg|png|jpeg))$', line, re.IGNORECASE)
+
+        if space_url_match:
+            urls = [space_url_match.group(1)]
+        else:
+            # Fallback to standard non-space split
+            urls = re.findall(r'https?://\S+', line)
+
         if urls:
             parsed_lines += 1
             # Text before first URL
