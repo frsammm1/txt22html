@@ -128,6 +128,7 @@ def generate_html(categories, batch_name, credit_name):
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.4.0/hls.min.js"></script>
     <style>
         :root {{
             --primary: #4f46e5;
@@ -318,8 +319,14 @@ def generate_html(categories, batch_name, credit_name):
             inset: 0;
             background: black;
             z-index: 10000;
-            display: none;
+            display: flex;
             flex-direction: column;
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }}
+
+        #player-view.active {{
+            transform: translateY(0);
         }}
 
         .video-container {{
@@ -329,12 +336,13 @@ def generate_html(categories, batch_name, credit_name):
             display: flex;
             align-items: center;
             justify-content: center;
-            max-height: 45vh;
+            height: 40vh;
+            position: relative;
         }}
 
         video {{
             width: 100%;
-            max-height: 100%;
+            height: 100%;
             object-fit: contain;
         }}
 
@@ -348,9 +356,10 @@ def generate_html(categories, batch_name, credit_name):
             position: relative;
             display: flex;
             flex-direction: column;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.3);
         }}
 
-        .track-info {{ margin-bottom: 30px; }}
+        .track-info {{ margin-bottom: 25px; }}
 
         .track-title {{
             font-size: 1.3rem;
@@ -359,6 +368,7 @@ def generate_html(categories, batch_name, credit_name):
             background: linear-gradient(to right, var(--text-main), var(--text-muted));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            line-height: 1.3;
         }}
 
         .control-panel {{
@@ -367,7 +377,10 @@ def generate_html(categories, batch_name, credit_name):
             padding: 20px;
             border: 1px solid var(--border);
             margin-bottom: 20px;
+            transition: transform 0.2s;
         }}
+
+        .control-panel:active {{ transform: scale(0.99); }}
 
         .panel-label {{
             font-size: 0.75rem;
@@ -376,51 +389,84 @@ def generate_html(categories, batch_name, credit_name):
             color: var(--text-muted);
             margin-bottom: 12px;
             font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }}
 
-        /* Custom Speed Chips */
-        .speed-grid {{
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 6px;
-        }}
-
-        .speed-btn {{
-            padding: 8px 0;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid transparent;
-            border-radius: 8px;
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }}
-
-        .speed-btn.active {{
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 4px 10px var(--primary-glow);
-        }}
-
-        /* Volume Slider */
-        .vol-slider {{
+        /* Custom Sliders */
+        .custom-slider {{
             width: 100%;
-            height: 8px;
-            background: rgba(125,125,125,0.2);
+            height: 6px;
+            background: rgba(125,125,125,0.15);
             border-radius: 10px;
             outline: none;
             -webkit-appearance: none;
+            position: relative;
         }}
 
-        .vol-slider::-webkit-slider-thumb {{
+        .custom-slider::-webkit-slider-thumb {{
             -webkit-appearance: none;
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             background: var(--primary);
             border-radius: 50%;
             cursor: pointer;
             box-shadow: 0 0 0 4px var(--primary-glow);
+            border: 2px solid var(--bg-body);
+            transition: transform 0.1s;
         }}
+
+        .custom-slider::-webkit-slider-thumb:active {{ transform: scale(1.2); }}
+
+        .speed-presets {{
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+        }}
+
+        .speed-chip {{
+            flex: 1;
+            padding: 8px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-align: center;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: 0.2s;
+        }}
+
+        .speed-chip.active {{
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }}
+
+        /* Quality Menu */
+        #quality-menu {{
+            display: none;
+            margin-top: 10px;
+            background: var(--bg-body);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }}
+
+        .quality-opt {{
+            padding: 12px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+        }}
+
+        .quality-opt:last-child {{ border-bottom: none; }}
+        .quality-opt.active {{ background: rgba(79, 70, 229, 0.1); color: var(--primary); }}
+        .quality-opt:hover {{ background: rgba(255,255,255,0.02); }}
 
         .action-grid {{
             margin-top: auto;
@@ -534,7 +580,7 @@ def generate_html(categories, batch_name, credit_name):
     <!-- Enhanced Player View -->
     <div id="player-view">
         <div class="video-container">
-            <video id="main-player" controls controlsList="nodownload" oncontextmenu="return false;">
+            <video id="main-player" controls controlsList="nodownload" oncontextmenu="return false;" playsinline>
                 Your browser does not support video.
             </video>
         </div>
@@ -542,24 +588,34 @@ def generate_html(categories, batch_name, credit_name):
         <div class="player-controls">
             <div class="track-info">
                 <div class="track-title" id="player-title">Video Title</div>
-                <div style="font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+                <div style="font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
                     <span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 0.7rem;">SECURE</span>
-                    <span>No Downloads Allowed</span>
+                    <span><i class="fas fa-shield-alt"></i> No Downloads</span>
                 </div>
             </div>
 
-            <!-- Speed -->
+            <!-- Quality (Hidden if not HLS) -->
+            <div class="control-panel" id="quality-panel" style="display:none;">
+                <div class="panel-label" onclick="toggleQuality()" style="cursor: pointer;">
+                    <span><i class="fas fa-cog"></i> Video Quality</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div id="quality-menu"></div>
+            </div>
+
+            <!-- Speed (Slider) -->
             <div class="control-panel">
                 <div class="panel-label">
-                    <i class="fas fa-tachometer-alt"></i> Playback Speed
+                    <span><i class="fas fa-tachometer-alt"></i> Speed</span>
+                    <span id="speed-val" style="color: var(--primary);">1.0x</span>
                 </div>
-                <div class="speed-grid">
-                    <button class="speed-btn" onclick="setSpeed(0.5)">0.5x</button>
-                    <button class="speed-btn" onclick="setSpeed(0.75)">0.75x</button>
-                    <button class="speed-btn active" onclick="setSpeed(1.0)">1x</button>
-                    <button class="speed-btn" onclick="setSpeed(1.25)">1.25x</button>
-                    <button class="speed-btn" onclick="setSpeed(1.5)">1.5x</button>
-                    <button class="speed-btn" onclick="setSpeed(2.0)">2x</button>
+                <input type="range" class="custom-slider" min="0.25" max="3" step="0.05" value="1" oninput="updateSpeed(this.value)">
+
+                <div class="speed-presets">
+                    <div class="speed-chip" onclick="updateSpeed(1)">1.0x</div>
+                    <div class="speed-chip" onclick="updateSpeed(1.5)">1.5x</div>
+                    <div class="speed-chip" onclick="updateSpeed(2)">2.0x</div>
+                    <div class="speed-chip" onclick="updateSpeed(3)">3.0x</div>
                 </div>
             </div>
 
@@ -569,7 +625,7 @@ def generate_html(categories, batch_name, credit_name):
                     <span><i class="fas fa-volume-up"></i> Volume</span>
                     <span id="vol-display" style="color: var(--primary);">100%</span>
                 </div>
-                <input type="range" class="vol-slider" min="0" max="1" step="0.1" value="1" oninput="setVolume(this.value)">
+                <input type="range" class="custom-slider" min="0" max="1" step="0.05" value="1" oninput="setVolume(this.value)">
             </div>
 
             <div class="action-grid">
@@ -693,24 +749,112 @@ def generate_html(categories, batch_name, credit_name):
 
         // --- Player Logic ---
         const player = document.getElementById('main-player');
+        let hls = null;
 
         function openPlayer(url, title) {{
             const view = document.getElementById('player-view');
             document.getElementById('player-title').textContent = title;
-            player.src = url;
+
+            // Reset state
+            document.getElementById('quality-panel').style.display = 'none';
+            document.getElementById('quality-menu').innerHTML = '';
+
+            // Init HLS or Native
+            if (Hls.isSupported() && url.includes('.m3u8')) {{
+                if (hls) hls.destroy();
+                hls = new Hls();
+                hls.loadSource(url);
+                hls.attachMedia(player);
+
+                hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {{
+                    if (data.levels.length > 1) {{
+                        setupQualityControls(data.levels);
+                    }}
+                    player.play();
+                }});
+            }} else if (player.canPlayType('application/vnd.apple.mpegurl')) {{
+                // Safari Native HLS
+                player.src = url;
+                player.play();
+            }} else {{
+                // Standard MP4
+                player.src = url;
+                player.play();
+            }}
+
+            // Show UI with animation
             view.style.display = 'flex';
-            player.play();
+            // Force reflow
+            void view.offsetWidth;
+            view.classList.add('active');
+        }}
+
+        function setupQualityControls(levels) {{
+            const panel = document.getElementById('quality-panel');
+            const menu = document.getElementById('quality-menu');
+            panel.style.display = 'block';
+
+            // Auto option
+            let html = `<div class="quality-opt active" onclick="setQuality(-1, this)">
+                <span>Auto</span>
+                <i class="fas fa-check"></i>
+            </div>`;
+
+            levels.forEach((lvl, idx) => {{
+                html += `<div class="quality-opt" onclick="setQuality(${{idx}}, this)">
+                    <span>${{lvl.height}}p</span>
+                    <i class="fas fa-check" style="opacity:0"></i>
+                </div>`;
+            }});
+
+            menu.innerHTML = html;
+        }}
+
+        function setQuality(levelIndex, el) {{
+            if (hls) hls.currentLevel = levelIndex;
+
+            // UI Update
+            document.querySelectorAll('.quality-opt').forEach(opt => {{
+                opt.classList.remove('active');
+                opt.querySelector('.fa-check').style.opacity = '0';
+            }});
+            el.classList.add('active');
+            el.querySelector('.fa-check').style.opacity = '1';
+
+            toggleQuality(); // Close menu
+        }}
+
+        function toggleQuality() {{
+            const menu = document.getElementById('quality-menu');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
         }}
 
         function closePlayer() {{
-            document.getElementById('player-view').style.display = 'none';
-            player.pause();
-            player.src = '';
+            const view = document.getElementById('player-view');
+            view.classList.remove('active');
+
+            // Wait for animation
+            setTimeout(() => {{
+                view.style.display = 'none';
+                player.pause();
+                player.src = '';
+                if(hls) {{
+                    hls.destroy();
+                    hls = null;
+                }}
+            }}, 400);
         }}
 
-        function setSpeed(rate) {{
+        function updateSpeed(val) {{
+            const rate = parseFloat(val);
             player.playbackRate = rate;
-            document.querySelectorAll('.speed-btn').forEach(c => {{
+            document.getElementById('speed-val').textContent = rate + 'x';
+
+            // Update slider if changed via buttons
+            document.querySelector('.custom-slider').value = rate;
+
+            // Highlight chips
+            document.querySelectorAll('.speed-chip').forEach(c => {{
                 c.classList.toggle('active', parseFloat(c.innerText) === rate);
             }});
         }}
