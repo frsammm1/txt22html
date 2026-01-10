@@ -207,689 +207,631 @@ def generate_html(categories, password, batch_name, credit_name):
     
     # Convert to JSON safely
     encrypted_json = json.dumps(encrypted_data)
-    
-    html = f'''<!DOCTYPE html>
+
+    html_template = """<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>{batch_name}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        * {{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }}
+        /* Global Styles & Variables */
+:root {{
+    --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --transition-speed: 0.3s;
+}}
 
-        :root {{
-            --bg-primary: #0a0a0a;
-            --bg-secondary: #141414;
-            --bg-card: #1e1e1e;
-            --text-primary: #ffffff;
-            --text-secondary: #a0a0a0;
-            --accent: #00ff88;
-            --accent-hover: #00cc6a;
-            --border: #2a2a2a;
-        }}
+body {{
+    font-family: var(--font-family);
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color var(--transition-speed), color var(--transition-speed);
+}}
 
-        body.theme-light {{
-            --bg-primary: #ffffff;
-            --bg-secondary: #f5f5f5;
-            --bg-card: #ffffff;
-            --text-primary: #1a1a1a;
-            --text-secondary: #666666;
-            --accent: #007aff;
-            --accent-hover: #0051d5;
-            --border: #e0e0e0;
-        }}
+body, html {{
+    overscroll-behavior-y: contain;
+}}
 
-        body.theme-sunset {{
-            --bg-primary: #1a0a0a;
-            --bg-secondary: #2a1515;
-            --bg-card: #3a2020;
-            --text-primary: #ffe0d0;
-            --text-secondary: #d0a090;
-            --accent: #ff6b35;
-            --accent-hover: #ff4500;
-            --border: #4a2525;
-        }}
+/* Dark Theme (Default) */
+body.dark {{
+    --bg-primary: #121212;
+    --bg-secondary: #1e1e1e;
+    --bg-tertiary: #2a2a2a;
+    --text-primary: #ffffff;
+    --text-secondary: #b3b3b3;
+    --accent-primary: #1DB954; /* Spotify Green */
+    --accent-secondary: #ffffff;
+    --border-color: #2a2a2a;
+}}
 
-        body.theme-ocean {{
-            --bg-primary: #001520;
-            --bg-secondary: #002540;
-            --bg-card: #003560;
-            --text-primary: #e0f0ff;
-            --text-secondary: #a0c0d0;
-            --accent: #00d4ff;
-            --accent-hover: #00a8cc;
-            --border: #004570;
-        }}
+/* Light Theme */
+body.light {{
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f5;
+    --bg-tertiary: #e0e0e0;
+    --text-primary: #000000;
+    --text-secondary: #5f5f5f;
+    --accent-primary: #1D89E4; /* Blue */
+    --accent-secondary: #ffffff;
+    --border-color: #e0e0e0;
+}}
 
-        body.theme-forest {{
-            --bg-primary: #0a1a0a;
-            --bg-secondary: #152a15;
-            --bg-card: #203a20;
-            --text-primary: #e0ffe0;
-            --text-secondary: #a0d0a0;
-            --accent: #4ade80;
-            --accent-hover: #22c55e;
-            --border: #254a25;
-        }}
+/* Ocean Theme */
+body.ocean {{
+    --bg-primary: #0d1b2a;
+    --bg-secondary: #1b263b;
+    --bg-tertiary: #415a77;
+    --text-primary: #e0e1dd;
+    --text-secondary: #a0a0a0;
+    --accent-primary: #778da9;
+    --accent-secondary: #ffffff;
+    --border-color: #415a77;
+}}
 
-        body.theme-purple {{
-            --bg-primary: #1a0a2a;
-            --bg-secondary: #2a1540;
-            --bg-card: #3a2060;
-            --text-primary: #f0e0ff;
-            --text-secondary: #c0a0d0;
-            --accent: #a855f7;
-            --accent-hover: #9333ea;
-            --border: #4a2570;
-        }}
+/* Forest Theme */
+body.forest {{
+    --bg-primary: #1a2e28;
+    --bg-secondary: #2a403a;
+    --bg-tertiary: #3a524c;
+    --text-primary: #d4e0d9;
+    --text-secondary: #a0b0a9;
+    --accent-primary: #6a994e;
+    --accent-secondary: #ffffff;
+    --border-color: #3a524c;
+}}
 
-        body.theme-midnight {{
-            --bg-primary: #000814;
-            --bg-secondary: #001d3d;
-            --bg-card: #003566;
-            --text-primary: #ffc300;
-            --text-secondary: #ffd60a;
-            --accent: #ffd60a;
-            --accent-hover: #ffea00;
-            --border: #004080;
-        }}
 
-        body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            transition: all 0.4s ease;
-        }}
+body {{
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}}
 
-        #passwordScreen {{
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            animation: fadeIn 0.5s;
-        }}
 
-        @keyframes fadeIn {{
-            from {{ opacity: 0; }}
-            to {{ opacity: 1; }}
-        }}
+/* Password Screen */
+#password-screen {{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    padding: 20px;
+}}
 
-        .password-box {{
-            background: var(--bg-card);
-            padding: 50px;
-            border-radius: 25px;
-            box-shadow: 0 25px 70px rgba(0,0,0,0.5);
-            text-align: center;
-            max-width: 450px;
-            width: 90%;
-            animation: slideUp 0.5s ease-out;
-        }}
+.password-box {{
+    background-color: var(--bg-secondary);
+    padding: 40px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    max-width: 400px;
+    width: 100%;
+}}
 
-        @keyframes slideUp {{
-            from {{ transform: translateY(30px); opacity: 0; }}
-            to {{ transform: translateY(0); opacity: 1; }}
-        }}
+.password-icon {{
+    font-size: 3rem;
+    color: var(--accent-primary);
+    margin-bottom: 20px;
+}}
 
-        .password-box h1 {{
-            color: var(--accent);
-            margin-bottom: 15px;
-            font-size: 2.5em;
-        }}
+.password-box h1 {{
+    margin-bottom: 10px;
+    font-size: 1.5rem;
+}}
 
-        .password-box p {{
-            color: var(--text-secondary);
-            margin-bottom: 30px;
-        }}
+.password-box p {{
+    color: var(--text-secondary);
+    margin-bottom: 30px;
+}}
 
-        .password-box input {{
-            width: 100%;
-            padding: 18px;
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            font-size: 17px;
-            margin-bottom: 20px;
-            transition: all 0.3s;
-        }}
+#password-input {{
+    width: 100%;
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-size: 1rem;
+    margin-bottom: 20px;
+}}
 
-        .password-box input:focus {{
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(0,255,136,0.1);
-        }}
+#password-submit-btn {{
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--accent-primary);
+    color: var(--accent-secondary);
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+}}
 
-        .password-box button {{
-            width: 100%;
-            padding: 18px;
-            background: var(--accent);
-            color: var(--bg-primary);
-            border: none;
-            border-radius: 12px;
-            font-size: 17px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-        }}
+/* Main Content */
+#main-content {{
+    padding: 20px;
+}}
 
-        .password-box button:hover {{
-            background: var(--accent-hover);
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }}
+.app-header {{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}}
 
-        #mainContent {{
-            display: none;
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 25px;
-            animation: fadeIn 0.6s;
-        }}
+.batch-title {{
+    font-size: 2rem;
+    font-weight: 900;
+}}
 
-        .header {{
-            text-align: center;
-            padding: 40px 30px;
-            background: var(--bg-card);
-            border-radius: 20px;
-            margin-bottom: 35px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-            border: 1px solid var(--border);
-        }}
+.header-actions button {{
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    cursor: pointer;
+}}
 
-        .developer {{
-            color: var(--accent);
-            font-size: 15px;
-            margin-bottom: 12px;
-            font-weight: 600;
-            letter-spacing: 1px;
-        }}
+.batch-meta {{
+    color: var(--text-secondary);
+    margin-bottom: 30px;
+    font-size: 1rem;
+}}
 
-        .batch-name {{
-            font-size: 2.8em;
-            font-weight: 900;
-            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 25px;
-            line-height: 1.2;
-        }}
+/* Tabs */
+.tabs {{
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+    overflow-x: auto;
+    scrollbar-width: none; /* Firefox */
+}}
+.tabs::-webkit-scrollbar {{
+    display: none; /* Safari and Chrome */
+}}
 
-        .controls {{
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-bottom: 35px;
-        }}
+.tab-btn {{
+    padding: 10px 20px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-weight: 600;
+    white-space: nowrap;
+}}
 
-        .theme-btn {{
-            padding: 12px 24px;
-            background: var(--bg-card);
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            color: var(--text-primary);
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 600;
-            font-size: 14px;
-        }}
+.tab-btn.active {{
+    background-color: var(--accent-primary);
+    color: var(--accent-secondary);
+}}
 
-        .theme-btn:hover {{
-            border-color: var(--accent);
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-        }}
+/* Categories & Items */
+.category-section {{
+    margin-bottom: 30px;
+}}
 
-        .theme-btn:active {{
-            transform: translateY(-1px);
-        }}
+.category-title {{
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}}
 
-        .stats {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 20px;
-            margin-bottom: 35px;
-        }}
+.item-card {{
+    display: flex;
+    align-items: center;
+    background-color: var(--bg-secondary);
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    cursor: pointer;
+}}
 
-        .stat-card {{
-            background: var(--bg-card);
-            padding: 25px;
-            border-radius: 18px;
-            text-align: center;
-            border: 2px solid var(--border);
-            transition: all 0.4s;
-            cursor: pointer;
-        }}
+.item-icon {{
+    font-size: 1.5rem;
+    margin-right: 15px;
+    width: 30px;
+    text-align: center;
+    color: var(--accent-primary);
+}}
 
-        .stat-card:hover {{
-            border-color: var(--accent);
-            transform: translateY(-8px);
-            box-shadow: 0 12px 30px rgba(0,0,0,0.3);
-        }}
+.item-title {{
+    flex-grow: 1;
+    font-size: 1rem;
+}}
 
-        .stat-number {{
-            font-size: 2.5em;
-            font-weight: 900;
-            color: var(--accent);
-            margin-bottom: 5px;
-        }}
+.app-footer {{
+    text-align: center;
+    padding: 20px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}}
 
-        .stat-label {{
-            color: var(--text-secondary);
-            font-size: 14px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }}
+/* Video Player Screen */
+#video-player-screen {{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-primary);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+}}
 
-        .category {{
-            background: var(--bg-card);
-            padding: 25px;
-            border-radius: 18px;
-            margin-bottom: 25px;
-            border: 2px solid var(--border);
-            transition: all 0.3s;
-        }}
+.video-header {{
+    padding: 20px;
+    flex-shrink: 0;
+}}
 
-        .category:hover {{
-            border-color: var(--accent);
-        }}
+#back-btn {{
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    cursor: pointer;
+    margin-right: 15px;
+}}
 
-        .category-header {{
-            font-size: 1.6em;
-            font-weight: 800;
-            color: var(--accent);
-            margin-bottom: 20px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid var(--border);
-        }}
+#video-title-header {{
+    font-size: 1.2rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}}
 
-        .item {{
-            background: var(--bg-secondary);
-            padding: 18px;
-            border-radius: 12px;
-            margin-bottom: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border: 2px solid var(--border);
-            transition: all 0.3s;
-        }}
+.video-container {{
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #000;
+}}
 
-        .item:hover {{
-            border-color: var(--accent);
-            transform: translateX(8px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }}
+#video-player {{
+    width: 100%;
+    max-height: 100%;
+    border-radius: 8px;
+}}
 
-        .item-title {{
-            flex: 1;
-            font-weight: 500;
-            margin-right: 15px;
-        }}
+.video-controls-container {{
+    background-color: var(--bg-secondary);
+    padding: 20px;
+    border-top: 1px solid var(--border-color);
+    flex-shrink: 0;
+}}
 
-        .item-badge {{
-            padding: 6px 18px;
-            border-radius: 25px;
-            font-size: 11px;
-            font-weight: 700;
-            margin-right: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }}
+.control-group {{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}}
+.control-group:last-child {{
+    margin-bottom: 0;
+}}
 
-        .badge-video {{
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            color: white;
-        }}
+.control-group label {{
+    font-weight: 600;
+}}
 
-        .badge-pdf {{
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: white;
-        }}
+#speed-selector {{
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+}}
 
-        .badge-image {{
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-            color: white;
-        }}
+#volume-slider {{
+    width: 150px;
+}}
 
-        .badge-other {{
-            background: linear-gradient(135deg, #6b7280, #4b5563);
-            color: white;
-        }}
+/* Theme Modal */
+#theme-modal {{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.7);
+    z-index: 200;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}}
 
-        .item-btn {{
-            padding: 10px 24px;
-            background: var(--accent);
-            color: var(--bg-primary);
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 700;
-            font-size: 14px;
-        }}
+.theme-modal-content {{
+    background-color: var(--bg-secondary);
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+}}
 
-        .item-btn:hover {{
-            background: var(--accent-hover);
-            transform: scale(1.05);
-        }}
+.theme-modal-content h2 {{
+    margin-bottom: 20px;
+}}
 
-        #videoModal {{
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.97);
-            z-index: 10000;
-            padding: 25px;
-            animation: fadeIn 0.3s;
-        }}
+.theme-options {{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 30px;
+}}
 
-        .modal-content {{
-            position: relative;
-            max-width: 1000px;
-            margin: 0 auto;
-            padding-top: 70px;
-        }}
+.theme-option-btn {{
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-size: 1rem;
+    cursor: pointer;
+}}
 
-        .modal-header {{
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            padding: 18px;
-            background: var(--bg-card);
-            border-radius: 12px 12px 0 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid var(--border);
-        }}
-
-        .back-btn {{
-            padding: 12px 25px;
-            background: var(--accent);
-            color: var(--bg-primary);
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 15px;
-            transition: all 0.3s;
-        }}
-
-        .back-btn:hover {{
-            background: var(--accent-hover);
-            transform: scale(1.05);
-        }}
-
-        video {{
-            width: 100%;
-            border-radius: 12px;
-            background: #000;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-        }}
-
-        .video-controls {{
-            margin-top: 18px;
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }}
-
-        .speed-btn {{
-            padding: 10px 18px;
-            background: var(--bg-card);
-            color: var(--text-primary);
-            border: 2px solid var(--border);
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-        }}
-
-        .speed-btn:hover {{
-            border-color: var(--accent);
-        }}
-
-        .speed-btn.active {{
-            background: var(--accent);
-            border-color: var(--accent);
-            color: var(--bg-primary);
-        }}
-
-        @media (max-width: 768px) {{
-            .batch-name {{
-                font-size: 2em;
-            }}
-            
-            .stat-card {{
-                padding: 18px;
-            }}
-
-            .password-box {{
-                padding: 35px;
-            }}
-
-            .item {{
-                flex-direction: column;
-                gap: 10px;
-                align-items: flex-start;
-            }}
-
-            .item-btn {{
-                width: 100%;
-            }}
-        }}
+#close-theme-modal-btn {{
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--accent-primary);
+    color: var(--accent-secondary);
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+}}
     </style>
 </head>
 <body>
-    <div id="passwordScreen">
+
+    <!-- Password Screen -->
+    <div id="password-screen">
         <div class="password-box">
-            <h1>🔒</h1>
-            <p>This content is protected</p>
-            <input type="password" id="passwordInput" placeholder="Enter password" onkeypress="if(event.key==='Enter') checkPassword()">
-            <button onclick="checkPassword()">Unlock</button>
+            <i class="fas fa-lock password-icon"></i>
+            <h1>Content Locked</h1>
+            <p>Please enter the password to unlock.</p>
+            <input type="password" id="password-input" placeholder="Enter Password">
+            <button id="password-submit-btn">Unlock</button>
         </div>
     </div>
 
-    <div id="mainContent">
-        <div class="header">
-            <div class="developer">Developer - {credit_name}</div>
-            <div class="batch-name">{batch_name}</div>
-        </div>
-
-        <div class="controls">
-            <button class="theme-btn" onclick="changeTheme('dark')">🌑 Dark</button>
-            <button class="theme-btn" onclick="changeTheme('light')">☀️ Light</button>
-            <button class="theme-btn" onclick="changeTheme('sunset')">🌅 Sunset</button>
-            <button class="theme-btn" onclick="changeTheme('ocean')">🌊 Ocean</button>
-            <button class="theme-btn" onclick="changeTheme('forest')">🌲 Forest</button>
-            <button class="theme-btn" onclick="changeTheme('purple')">💜 Purple</button>
-            <button class="theme-btn" onclick="changeTheme('midnight')">🌃 Midnight</button>
-        </div>
-
-        <div class="stats" id="stats"></div>
-        <div id="categories"></div>
-    </div>
-
-    <div id="videoModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button class="back-btn" onclick="closeVideo()">← Back</button>
-                <span id="videoTitle" style="color: var(--text-primary); font-weight: 600;"></span>
+    <!-- Main Content -->
+    <div id="main-content" style="display: none;">
+        <header class="app-header">
+            <h1 class="batch-title">{batch_name}</h1>
+            <div class="header-actions">
+                <button id="theme-switcher-btn"><i class="fas fa-palette"></i></button>
             </div>
-            <video id="videoPlayer" controls></video>
-            <div class="video-controls">
-                <button class="speed-btn" onclick="setSpeed(0.5)">0.5x</button>
-                <button class="speed-btn" onclick="setSpeed(0.75)">0.75x</button>
-                <button class="speed-btn active" onclick="setSpeed(1)">1x</button>
-                <button class="speed-btn" onclick="setSpeed(1.25)">1.25x</button>
-                <button class="speed-btn" onclick="setSpeed(1.5)">1.5x</button>
-                <button class="speed-btn" onclick="setSpeed(2)">2x</button>
+        </header>
+
+        <div class="batch-meta">
+            <p>Useful for All Your Learning Needs</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-filter="all">All</button>
+            <button class="tab-btn" data-filter="video">Videos</button>
+            <button class="tab-btn" data-filter="pdf">PDFs</button>
+            <button class="tab-btn" data-filter="image">Images</button>
+            <button class="tab-btn" data-filter="other">Other</button>
+        </div>
+
+        <div id="categories-container">
+            <!-- Categories and items will be injected by JavaScript -->
+        </div>
+
+        <footer class="app-footer">
+            <p>Developed by {credit_name}</p>
+        </footer>
+    </div>
+
+    <!-- Video Player Screen -->
+    <div id="video-player-screen" style="display: none;">
+        <header class="app-header video-header">
+            <button id="back-btn"><i class="fas fa-arrow-left"></i> Back</button>
+            <h1 id="video-title-header">Video Title</h1>
+        </header>
+        <div class="video-container">
+            <video id="video-player" controls controlslist="nodownload"></video>
+        </div>
+        <div class="video-controls-container">
+            <div class="control-group">
+                <label for="speed-selector">Speed:</label>
+                <select id="speed-selector">
+                    <option value="0.5">0.5x</option>
+                    <option value="0.75">0.75x</option>
+                    <option value="1" selected>1x (Normal)</option>
+                    <option value="1.25">1.25x</option>
+                    <option value="1.5">1.5x</option>
+                    <option value="2">2x</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="volume-slider">Volume:</label>
+                <i class="fas fa-volume-down"></i>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="1">
+                <i class="fas fa-volume-up"></i>
             </div>
         </div>
     </div>
 
+    <div id="theme-modal" style="display: none;">
+        <div class="theme-modal-content">
+            <h2>Select a Theme</h2>
+            <div class="theme-options">
+                 <button class="theme-option-btn" data-theme="dark">Dark</button>
+                <button class="theme-option-btn" data-theme="light">Light</button>
+                <button class="theme-option-btn" data-theme="ocean">Ocean</button>
+                <button class="theme-option-btn" data-theme="forest">Forest</button>
+            </div>
+            <button id="close-theme-modal-btn">Close</button>
+        </div>
+    </div>
     <script>
-        const PASSWORD = "{password}";
-        const encryptedData = {encrypted_json};
+        document.addEventListener('DOMContentLoaded', () => {{
+    // --- Constants and State ---
+    const PASSWORD = "{password}";
+    const encryptedData = {encrypted_json};
 
-        function checkPassword() {{
-            const input = document.getElementById('passwordInput').value;
-            if (input === PASSWORD) {{
-                document.getElementById('passwordScreen').style.display = 'none';
-                document.getElementById('mainContent').style.display = 'block';
-                loadContent();
-            }} else {{
-                alert('❌ Wrong Password!');
-                document.getElementById('passwordInput').value = '';
-            }}
-        }}
+    // --- DOM Elements ---
+    const passwordScreen = document.getElementById('password-screen');
+    const passwordInput = document.getElementById('password-input');
+    const passwordSubmitBtn = document.getElementById('password-submit-btn');
+    const mainContent = document.getElementById('main-content');
+    const categoriesContainer = document.getElementById('categories-container');
+    const videoPlayerScreen = document.getElementById('video-player-screen');
+    const videoPlayer = document.getElementById('video-player');
+    const videoTitleHeader = document.getElementById('video-title-header');
+    const backBtn = document.getElementById('back-btn');
+    const speedSelector = document.getElementById('speed-selector');
+    const volumeSlider = document.getElementById('volume-slider');
+    const tabs = document.querySelectorAll('.tab-btn');
+    const themeSwitcherBtn = document.getElementById('theme-switcher-btn');
+    const themeModal = document.getElementById('theme-modal');
+    const closeThemeModalBtn = document.getElementById('close-theme-modal-btn');
+    const themeOptionBtns = document.querySelectorAll('.theme-option-btn');
 
-        function decryptLink(encrypted) {{
-            try {{
-                const decoded = atob(encrypted);
-                const parts = decoded.split('|');
-                if (parts[1] === PASSWORD) {{
-                    return parts[0];
-                }}
-            }} catch(e) {{}}
+    // --- Functions ---
+    const decryptLink = (encrypted) => {{
+        try {{
+            const decoded = atob(encrypted);
+            const parts = decoded.split('|');
+            return parts[1] === PASSWORD ? parts[0] : null;
+        }} catch (e) {{
             return null;
         }}
+    }};
 
-        function loadContent() {{
-            let totalVideos = 0;
-            let totalPDFs = 0;
-            let totalImages = 0;
-            let totalOther = 0;
-            let totalItems = 0;
+    const getIconForType = (type) => {{
+        switch (type.toUpperCase()) {{
+            case 'VIDEO': return 'fas fa-play-circle';
+            case 'PDF': return 'fas fa-file-pdf';
+            case 'IMAGE': return 'fas fa-file-image';
+            default: return 'fas fa-file-alt';
+        }}
+    }};
 
-            const categoriesDiv = document.getElementById('categories');
-            
-            for (const [category, items] of Object.entries(encryptedData)) {{
-                totalItems += items.length;
-                items.forEach(item => {{
-                    if (item.type === 'VIDEO') totalVideos++;
-                    else if (item.type === 'PDF') totalPDFs++;
-                    else if (item.type === 'IMAGE') totalImages++;
-                    else totalOther++;
-                }});
+    const renderContent = (filter = 'all') => {{
+        categoriesContainer.innerHTML = '';
+        for (const [category, items] of Object.entries(encryptedData)) {{
+            const filteredItems = filter === 'all'
+                ? items
+                : items.filter(item => item.type.toLowerCase() === filter);
 
-                const categoryDiv = document.createElement('div');
-                categoryDiv.className = 'category';
-                categoryDiv.innerHTML = `<div class="category-header">${{category}}</div>`;
+            if (filteredItems.length > 0) {{
+                const categorySection = document.createElement('div');
+                categorySection.className = 'category-section';
 
-                items.forEach(item => {{
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = 'item';
-                    
-                    let badge = '';
-                    let buttonText = '📄 Open';
-                    
-                    if (item.type === 'VIDEO') {{
-                        badge = '<span class="item-badge badge-video">VIDEO</span>';
-                        buttonText = '▶️ Play';
-                    }} else if (item.type === 'PDF') {{
-                        badge = '<span class="item-badge badge-pdf">PDF</span>';
-                    }} else if (item.type === 'IMAGE') {{
-                        badge = '<span class="item-badge badge-image">IMAGE</span>';
-                    }} else {{
-                        badge = '<span class="item-badge badge-other">FILE</span>';
-                    }}
-                    
-                    itemDiv.innerHTML = `
-                        <div class="item-title">${{item.title}}</div>
-                        ${{badge}}
-                        <button class="item-btn" onclick='openLink("${{item.link}}", "${{item.title}}", "${{item.type}}")'>
-                            ${{buttonText}}
-                        </button>
+                const categoryTitle = document.createElement('h2');
+                categoryTitle.className = 'category-title';
+                categoryTitle.textContent = category;
+                categorySection.appendChild(categoryTitle);
+
+                filteredItems.forEach(item => {{
+                    const itemCard = document.createElement('div');
+                    itemCard.className = 'item-card';
+                    itemCard.innerHTML = `
+                        <i class="item-icon ${{getIconForType(item.type)}}"></i>
+                        <span class="item-title">${{item.title}}</span>
                     `;
-                    categoryDiv.appendChild(itemDiv);
+                    itemCard.addEventListener('click', () => openLink(item.link, item.title, item.type));
+                    categorySection.appendChild(itemCard);
                 }});
-
-                categoriesDiv.appendChild(categoryDiv);
-            }}
-
-            document.getElementById('stats').innerHTML = `
-                <div class="stat-card">
-                    <div class="stat-number">${{totalItems}}</div>
-                    <div class="stat-label">All Items</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${{totalVideos}}</div>
-                    <div class="stat-label">Videos</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${{totalPDFs}}</div>
-                    <div class="stat-label">PDFs</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${{totalImages}}</div>
-                    <div class="stat-label">Images</div>
-                </div>
-            `;
-        }}
-
-        function openLink(encrypted, title, type) {{
-            const link = decryptLink(encrypted);
-            if (!link) {{
-                alert('❌ Invalid link!');
-                return;
-            }}
-
-            if (type === 'VIDEO') {{
-                document.getElementById('videoTitle').textContent = title;
-                document.getElementById('videoPlayer').src = link;
-                document.getElementById('videoModal').style.display = 'block';
-            }} else {{
-                window.open(link, '_blank');
+                categoriesContainer.appendChild(categorySection);
             }}
         }}
+    }};
 
-        function closeVideo() {{
-            document.getElementById('videoModal').style.display = 'none';
-            document.getElementById('videoPlayer').pause();
-            document.getElementById('videoPlayer').src = '';
+    const openLink = (encrypted, title, type) => {{
+        const link = decryptLink(encrypted);
+        if (!link) {{
+            alert('Error: Could not decrypt link.');
+            return;
         }}
 
-        function setSpeed(speed) {{
-            document.getElementById('videoPlayer').playbackRate = speed;
-            document.querySelectorAll('.speed-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+        if (type.toUpperCase() === 'VIDEO') {{
+            videoTitleHeader.textContent = title;
+            videoPlayer.src = link;
+            mainContent.style.display = 'none';
+            videoPlayerScreen.style.display = 'flex';
+            videoPlayer.play();
+        }} else {{
+            window.open(link, '_blank');
         }}
+    }};
 
-        function changeTheme(theme) {{
-            document.body.className = theme === 'dark' ? '' : `theme-${{theme}}`;
-            localStorage.setItem('theme', theme);
+    const checkPassword = () => {{
+        if (passwordInput.value === PASSWORD) {{
+            passwordScreen.style.display = 'none';
+            mainContent.style.display = 'block';
+            renderContent();
+            loadTheme();
+        }} else {{
+            alert('Incorrect Password!');
         }}
+    }};
 
-        // Load saved theme
-        window.onload = function() {{
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme && savedTheme !== 'dark') {{
-                document.body.className = `theme-${{savedTheme}}`;
-            }}
-        }};
+    const applyTheme = (theme) => {{
+        document.body.className = theme;
+        localStorage.setItem('theme', theme);
+    }};
+
+    const loadTheme = () => {{
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        applyTheme(savedTheme);
+    }};
+
+    // --- Event Listeners ---
+    passwordSubmitBtn.addEventListener('click', checkPassword);
+    passwordInput.addEventListener('keypress', (e) => e.key === 'Enter' && checkPassword());
+
+    backBtn.addEventListener('click', () => {{
+        videoPlayer.pause();
+        videoPlayer.src = '';
+        videoPlayerScreen.style.display = 'none';
+        mainContent.style.display = 'block';
+    }});
+
+    speedSelector.addEventListener('change', () => videoPlayer.playbackRate = speedSelector.value);
+    volumeSlider.addEventListener('input', () => videoPlayer.volume = volumeSlider.value);
+
+    tabs.forEach(tab => {{
+        tab.addEventListener('click', () => {{
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            renderContent(tab.dataset.filter);
+        }});
+    }});
+
+    themeSwitcherBtn.addEventListener('click', () => themeModal.style.display = 'flex');
+    closeThemeModalBtn.addEventListener('click', () => themeModal.style.display = 'none');
+
+    themeOptionBtns.forEach(btn => {{
+        btn.addEventListener('click', () => {{
+            applyTheme(btn.dataset.theme);
+            themeModal.style.display = 'none';
+        }});
+    }});
+
+    // --- Initial Load ---
+    loadTheme();
+}});
     </script>
 </body>
-</html>'''
+</html>""".format(
+        batch_name=batch_name,
+        credit_name=credit_name,
+        password=password,
+        encrypted_json=encrypted_json
+    )
     
-    return html
+    return html_template
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Start command handler"""
@@ -900,7 +842,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "🎉 Welcome to SUPER PARSER HTML Bot!\n\n"
         "✨ Features:\n"
         "• 🔒 Password Protection\n"
-        "• 🎨 7 Beautiful Themes\n"
+        "• 🎨 4 Beautiful Themes\n"
         "• 🎬 Video Player\n"
         "• 📱 Mobile-Friendly\n"
         "• 🔐 Encrypted Links\n"
